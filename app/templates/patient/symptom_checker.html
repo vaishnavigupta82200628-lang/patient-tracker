@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}AI Symptom Checker{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🤖 AI Symptom Checker</h2>
+        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="alert alert-info">
+                Describe how you're feeling in your own words. Our AI will identify possible symptoms from your description.
+            </div>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Describe your symptoms</label>
+                    <textarea name="symptoms_text" class="form-control" rows="5" required
+                              placeholder="e.g. I have had a fever and headache since yesterday, along with body pain and fatigue."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Analyze Symptoms</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

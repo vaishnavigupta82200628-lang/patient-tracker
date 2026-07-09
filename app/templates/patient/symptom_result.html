@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Symptom Analysis Result{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Symptom Analysis Result</h2>
+        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">What you described:</h6>
+                    <p class="card-text">{{ symptoms_text }}</p>
+                </div>
+            </div>
+
+            {% if extracted_symptoms %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-3 text-muted">Symptoms Identified:</h6>
+                    {% for symptom in extracted_symptoms %}
+                        <span class="badge bg-primary me-2 mb-2 p-2">{{ symptom }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="alert alert-warning">
+                ⚠️ This is not a medical diagnosis. Please consult a doctor for proper evaluation.
+            </div>
+            {% else %}
+            <div class="alert alert-secondary">
+                We couldn't identify specific symptoms from your description. Try being more specific (e.g. "fever", "headache", "cough").
+            </div>
+            {% endif %}
+
+            <a href="{{ url_for('patient.symptom_checker') }}" class="btn btn-primary w-100 mt-2">Check Again</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

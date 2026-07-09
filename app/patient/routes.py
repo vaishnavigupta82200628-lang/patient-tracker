@@ -2,9 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from datetime import datetime
 
+
 from app.extensions import db
 from app.models import Patient, Doctor, Appointment, MedicalRecord
 from app.utils import role_required
+from app.ai.symptom_analyzer import extract_symptoms
+from app.models import SymptomLog
 
 patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
 
@@ -127,3 +130,34 @@ def api_doctors_by_specialization():
         for doc in doctors
     ]
     return jsonify(doctors_list)
+@patient_bp.route('/symptom-checker', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def symptom_checker():
+    if request.method == 'POST':
+        symptoms_text = request.form.get('symptoms_text', '').strip()
+
+        if not symptoms_text:
+            flash('Please describe your symptoms.', 'warning')
+            return render_template('patient/symptom_checker.html')
+
+        extracted = extract_symptoms(symptoms_text)
+
+        patient = get_current_patient()
+        new_log = SymptomLog(
+            patient_id=patient.id,
+            symptoms_text=symptoms_text,
+            predicted_disease=None,  # Will be filled in Phase 13 (ML model)
+            confidence_score=None
+        )
+        db.session.add(new_log)
+        db.session.commit()
+
+        return render_template(
+            'patient/symptom_result.html',
+            symptoms_text=symptoms_text,
+            extracted_symptoms=extracted,
+            log_id=new_log.id
+        )
+
+    return render_template('patient/symptom_checker.html')
