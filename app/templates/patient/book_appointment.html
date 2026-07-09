@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Book Appointment{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Book an Appointment</h2>
+        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form method="POST" id="bookingForm">
+
+                <div class="mb-3">
+                    <label class="form-label">Specialization</label>
+                    <select id="specializationSelect" class="form-select" required>
+                        <option value="">Select Specialization</option>
+                        {% for spec in specializations %}
+                        <option value="{{ spec }}">{{ spec }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if not specializations %}
+                    <small class="text-danger">No doctors with a specialization set yet. Please check back later.</small>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Doctor</label>
+                    <select name="doctor_id" id="doctorSelect" class="form-select" required disabled>
+                        <option value="">Select specialization first</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Date & Time</label>
+                    <input type="datetime-local" name="date_time" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Reason for Visit</label>
+                    <textarea name="reason" class="form-control" rows="3" placeholder="Briefly describe your concern"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Book Appointment</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const specializationSelect = document.getElementById('specializationSelect');
+    const doctorSelect = document.getElementById('doctorSelect');
+
+    specializationSelect.addEventListener('change', async function () {
+        const specialization = this.value;
+
+        // Reset doctor dropdown
+        doctorSelect.innerHTML = '<option value="">Loading...</option>';
+        doctorSelect.disabled = true;
+
+        if (!specialization) {
+            doctorSelect.innerHTML = '<option value="">Select specialization first</option>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/patient/api/doctors?specialization=${encodeURIComponent(specialization)}`);
+            const doctors = await response.json();
+
+            if (doctors.length === 0) {
+                doctorSelect.innerHTML = '<option value="">No doctors available</option>';
+                return;
+            }
+
+            doctorSelect.innerHTML = '<option value="">Select a doctor</option>';
+            doctors.forEach(doc => {
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = `Dr. ${doc.name}` + (doc.qualification ? ` (${doc.qualification})` : '');
+                doctorSelect.appendChild(option);
+            });
+
+            doctorSelect.disabled = false;
+
+        } catch (error) {
+            doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
+            console.error('Error fetching doctors:', error);
+        }
+    });
+</script>
+{% endblock %}

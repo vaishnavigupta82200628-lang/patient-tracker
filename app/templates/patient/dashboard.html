@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Patient Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Welcome, {{ current_user.name }}</h2>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4 col-sm-6">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h3>{{ total_appointments }}</h3>
+                    <p class="mb-0">Total Appointments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h3>{{ upcoming_count }}</h3>
+                    <p class="mb-0">Upcoming (Approved)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h3>{{ total_records }}</h3>
+                    <p class="mb-0">Medical Records</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not patient.age %}
+    <div class="alert alert-warning">
+        ⚠️ Your profile is incomplete. <a href="{{ url_for('patient.profile') }}">Complete it now</a> for better care.
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+       <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-success me-2">Book Appointment</a>
+        <a href="{{ url_for('patient.records') }}" class="btn btn-secondary me-2">Medical Records</a>
+        <a href="{{ url_for('patient.profile') }}" class="btn btn-outline-primary">Edit Profile</a>
+    </div>
+</div>
+{% endblock %}

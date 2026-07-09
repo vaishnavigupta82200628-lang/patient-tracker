@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h3>{{ total_doctors }}</h3>
+                    <p class="mb-0">Total Doctors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h3>{{ total_patients }}</h3>
+                    <p class="mb-0">Total Patients</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h3>{{ total_appointments }}</h3>
+                    <p class="mb-0">Total Appointments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h3>{{ pending_appointments }}</h3>
+                    <p class="mb-0">Pending Appointments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <a href="{{ url_for('admin.manage_doctors') }}" class="btn btn-primary me-2">Manage Doctors</a>
+        <a href="{{ url_for('admin.manage_patients') }}" class="btn btn-secondary">Manage Patients</a>
+    </div>
+</div>
+{% endblock %}

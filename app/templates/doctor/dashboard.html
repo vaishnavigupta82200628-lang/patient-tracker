@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Doctor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Welcome, Dr. {{ current_user.name }}</h2>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-primary">
+                <div class="card-body text-center">
+                    <h3>{{ total_appointments }}</h3>
+                    <p class="mb-0">Total Appointments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h3>{{ pending_count }}</h3>
+                    <p class="mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h3>{{ approved_count }}</h3>
+                    <p class="mb-0">Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h3>{{ completed_count }}</h3>
+                    <p class="mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not doctor.specialization %}
+    <div class="alert alert-warning">
+        ⚠️ Your profile is incomplete. <a href="{{ url_for('doctor.profile') }}">Complete it now</a> so patients can find you.
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('doctor.appointments') }}" class="btn btn-primary me-2">View Appointments</a>
+        <a href="{{ url_for('doctor.profile') }}" class="btn btn-secondary">Edit Profile</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Home - Patient Tracker{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero-section text-center">
+    <div class="container">
+        <h1>AI-Powered Hospital Management System</h1>
+        <p class="lead">Smarter patient care through intelligent symptom analysis, seamless appointment booking, and real-time medical record management.</p>
+        {% if not current_user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg me-3">Get Started</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">Login</a>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <a href="{{ url_for('main.home') }}" class="btn btn-light btn-lg">Go to Dashboard</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- FEATURES SECTION -->
+<section class="section">
+    <div class="container">
+        <h2 class="text-center mb-5">Why Choose Patient Tracker?</h2>
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card bg-light">
+                    <div class="feature-icon">🤖</div>
+                    <h5>AI Symptom Analyzer</h5>
+                    <p class="text-muted">Describe your symptoms in plain language and get intelligent, data-driven insights.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card bg-light">
+                    <div class="feature-icon">📅</div>
+                    <h5>Easy Appointments</h5>
+                    <p class="text-muted">Book, reschedule, and manage appointments with your doctor in just a few clicks.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card bg-light">
+                    <div class="feature-icon">📋</div>
+                    <h5>Digital Medical Records</h5>
+                    <p class="text-muted">Access your complete medical history anytime, securely stored and organized.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="feature-card bg-light">
+                    <div class="feature-icon">📊</div>
+                    <h5>Smart Analytics</h5>
+                    <p class="text-muted">Doctors and admins get real-time insights through interactive dashboards.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS SECTION -->
+<section class="section bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">How It Works</h2>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="step-circle">1</div>
+                <h5>Create Your Account</h5>
+                <p class="text-muted">Register as a Patient or Doctor in under a minute.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="step-circle">2</div>
+                <h5>Book or Manage Appointments</h5>
+                <p class="text-muted">Patients book appointments; doctors approve and manage their schedule.</p>
+            </div>
+            <div class="col-md-4">
+                <div class="step-circle">3</div>
+                <h5>Get AI-Powered Insights</h5>
+                <p class="text-muted">Use the symptom analyzer and receive data-backed health insights instantly.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA SECTION -->
+{% if not current_user.is_authenticated %}
+<section class="section text-center">
+    <div class="container">
+        <h3>Ready to experience smarter healthcare management?</h3>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg mt-3">Create Your Free Account</a>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}
