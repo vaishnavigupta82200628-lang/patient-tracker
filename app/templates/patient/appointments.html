@@ -17,6 +17,7 @@
                 <th>Date & Time</th>
                 <th>Reason</th>
                 <th>Status</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +36,13 @@
                         <span class="badge bg-info">Completed</span>
                     {% elif appt.status == 'rejected' %}
                         <span class="badge bg-danger">Rejected</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if appt.status == 'completed' %}
+                        <a href="{{ url_for('patient.rate_doctor', appointment_id=appt.id) }}" class="btn btn-warning btn-sm">⭐ Rate</a>
+                    {% else %}
+                        <span class="text-muted">-</span>
                     {% endif %}
                 </td>
             </tr>

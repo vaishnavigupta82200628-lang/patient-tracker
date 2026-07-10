@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
+from sqlalchemy import func
 
 from app.extensions import db
-from app.models import Doctor, Appointment, Patient, MedicalRecord
-from app.utils import role_required, generate_pdf_report, create_notification
+from app.models import Doctor, Appointment, Patient, MedicalRecord, Review
+from app.utils import role_required, generate_pdf_report, create_notification, generate_csv
 
 doctor_bp = Blueprint('doctor', __name__, url_prefix='/doctor')
 
@@ -24,13 +25,19 @@ def dashboard():
     approved_count = Appointment.query.filter_by(doctor_id=doctor.id, status='approved').count()
     completed_count = Appointment.query.filter_by(doctor_id=doctor.id, status='completed').count()
 
+    avg_rating_result = db.session.query(func.avg(Review.rating)).filter_by(doctor_id=doctor.id).scalar()
+    avg_rating = round(avg_rating_result, 1) if avg_rating_result else None
+    total_reviews = Review.query.filter_by(doctor_id=doctor.id).count()
+
     return render_template(
         'doctor/dashboard.html',
         doctor=doctor,
         total_appointments=total_appointments,
         pending_count=pending_count,
         approved_count=approved_count,
-        completed_count=completed_count
+        completed_count=completed_count,
+        avg_rating=avg_rating,
+        total_reviews=total_reviews
     )
 
 
@@ -67,7 +74,6 @@ def update_appointment_status(appointment_id, new_status):
     doctor = get_current_doctor()
     appointment = Appointment.query.get_or_404(appointment_id)
 
-    # Security check: make sure this appointment actually belongs to this doctor
     if appointment.doctor_id != doctor.id:
         flash('Unauthorized action.', 'danger')
         return redirect(url_for('doctor.appointments'))
@@ -98,17 +104,14 @@ def add_record(appointment_id):
     doctor = get_current_doctor()
     appointment = Appointment.query.get_or_404(appointment_id)
 
-    # Security check: appointment must belong to this doctor
     if appointment.doctor_id != doctor.id:
         flash('Unauthorized action.', 'danger')
         return redirect(url_for('doctor.appointments'))
 
-    # Business rule check: can only add records for completed appointments
     if appointment.status != 'completed':
         flash('You can only add records for completed appointments.', 'warning')
         return redirect(url_for('doctor.appointments'))
 
-    # Check if a record already exists for this appointment
     existing_record = MedicalRecord.query.filter_by(appointment_id=appointment.id).first()
     if existing_record:
         flash('A record already exists for this appointment.', 'info')
@@ -172,4 +175,26 @@ def download_appointments_pdf():
         as_attachment=True,
         download_name=f"appointments_{current_user.name.replace(' ', '_')}.pdf",
         mimetype='application/pdf'
+    )
+
+
+@doctor_bp.route('/appointments/export-csv')
+@login_required
+@role_required('doctor')
+def export_appointments_csv():
+    doctor = get_current_doctor()
+    all_appointments = Appointment.query.filter_by(doctor_id=doctor.id).order_by(Appointment.date_time.desc()).all()
+
+    headers = ['Date & Time', 'Patient', 'Status', 'Reason']
+    rows = [
+        [a.date_time.strftime('%d %b %Y, %I:%M %p'), a.patient.user.name, a.status.capitalize(), a.reason or '-']
+        for a in all_appointments
+    ]
+
+    csv_buffer = generate_csv(headers, rows)
+    return send_file(
+        csv_buffer,
+        as_attachment=True,
+        download_name='my_appointments.csv',
+        mimetype='text/csv'
     )

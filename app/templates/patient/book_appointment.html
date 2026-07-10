@@ -26,11 +26,13 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">Doctor</label>
-                    <select name="doctor_id" id="doctorSelect" class="form-select" required disabled>
-                        <option value="">Select specialization first</option>
-                    </select>
-                </div>
+    <label class="form-label">Doctor</label>
+    <input type="text" id="doctorSearchBox" class="form-control mb-2"
+           placeholder="🔍 Type to search doctor by name..." disabled>
+    <select name="doctor_id" id="doctorSelect" class="form-select" required disabled size="5" style="height: auto;">
+        <option value="">Select specialization first</option>
+    </select>
+</div>
 
                 <div class="mb-3">
                     <label class="form-label">Date & Time</label>
@@ -81,13 +83,38 @@
                 doctorSelect.appendChild(option);
             });
 
-            doctorSelect.disabled = false;
+           doctorSelect.disabled = false;
+            searchBox.disabled = false;
+            allDoctorsOptions = Array.from(doctorSelect.options); // save full list for filtering
 
         } catch (error) {
             doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
             console.error('Error fetching doctors:', error);
         }
     });
+
+    // ---- Live search/filter for doctor dropdown ----
+    const searchBox = document.getElementById('doctorSearchBox');
+    let allDoctorsOptions = [];
+
+    searchBox.addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        doctorSelect.innerHTML = '';
+
+        const filtered = allDoctorsOptions.filter(opt =>
+            opt.value === '' || opt.textContent.toLowerCase().includes(query)
+        );
+
+        if (filtered.length <= 1) {
+            const noResult = document.createElement('option');
+            noResult.textContent = 'No matching doctors found';
+            noResult.value = '';
+            doctorSelect.appendChild(noResult);
+        } else {
+            filtered.forEach(opt => doctorSelect.appendChild(opt.cloneNode(true)));
+        }
+    });
+</script>
     // Set minimum date/time to now, preventing past-date selection in the UI
 const dateInput = document.getElementById('dateTimeInput');
 const now = new Date();

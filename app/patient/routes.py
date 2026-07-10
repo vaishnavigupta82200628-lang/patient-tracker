@@ -7,6 +7,8 @@ from app.models import Patient, Doctor, Appointment, MedicalRecord, SymptomLog
 from app.utils import role_required, generate_pdf_report, create_notification
 from app.ai.symptom_analyzer import extract_symptoms
 from app.ai.disease_predictor import predict_disease
+from app.ai.disease_info import DISEASE_INFO
+from app.models import Patient, Doctor, Appointment, MedicalRecord, SymptomLog, Review
 
 patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
 
@@ -158,6 +160,7 @@ def symptom_checker():
 
         extracted = extract_symptoms(symptoms_text)
         predicted_disease, confidence = predict_disease(extracted)
+        disease_description = DISEASE_INFO.get(predicted_disease, "No additional information available.")
 
         patient = get_current_patient()
         new_log = SymptomLog(
@@ -175,6 +178,7 @@ def symptom_checker():
             extracted_symptoms=extracted,
             predicted_disease=predicted_disease,
             confidence=confidence,
+            disease_description=disease_description,
             log_id=new_log.id
         )
 
@@ -212,3 +216,50 @@ def download_records_pdf():
         download_name=f"medical_records_{current_user.name.replace(' ', '_')}.pdf",
         mimetype='application/pdf'
     )
+
+@patient_bp.route('/appointments/<int:appointment_id>/rate', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def rate_doctor(appointment_id):
+    patient = get_current_patient()
+    appointment = Appointment.query.get_or_404(appointment_id)
+
+    # Security check: appointment must belong to this patient
+    if appointment.patient_id != patient.id:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('patient.appointments'))
+
+    # Business rule: only completed appointments can be rated
+    if appointment.status != 'completed':
+        flash('You can only rate a doctor after your appointment is completed.', 'warning')
+        return redirect(url_for('patient.appointments'))
+
+    # Check for duplicate review
+    existing_review = Review.query.filter_by(appointment_id=appointment.id).first()
+    if existing_review:
+        flash('You have already reviewed this appointment.', 'info')
+        return redirect(url_for('patient.appointments'))
+
+    if request.method == 'POST':
+        rating = request.form.get('rating')
+        comment = request.form.get('comment')
+
+        if not rating or int(rating) < 1 or int(rating) > 5:
+            flash('Please select a rating between 1 and 5.', 'danger')
+            return render_template('patient/rate_doctor.html', appointment=appointment)
+
+        new_review = Review(
+            appointment_id=appointment.id,
+            patient_id=patient.id,
+            doctor_id=appointment.doctor_id,
+            rating=int(rating),
+            comment=comment
+        )
+        db.session.add(new_review)
+        db.session.commit()
+
+        flash('Thank you for your feedback!', 'success')
+        return redirect(url_for('patient.appointments'))
+
+    return render_template('patient/rate_doctor.html', appointment=appointment)
+

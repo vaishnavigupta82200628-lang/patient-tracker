@@ -33,10 +33,16 @@
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 text-muted">AI Prediction:</h6>
                     <h4 class="text-primary">{{ predicted_disease }}</h4>
-                    <div class="progress mt-2" style="height: 25px;">
+
+                    <div class="progress mt-2 mb-3" style="height: 25px;">
                         <div class="progress-bar bg-primary" role="progressbar" style="width: {{ confidence }}%;">
                             {{ confidence }}% confidence
                         </div>
+                    </div>
+
+                    <div class="alert alert-light border mb-0">
+                        <strong>What is this?</strong><br>
+                        {{ disease_description }}
                     </div>
                 </div>
             </div>

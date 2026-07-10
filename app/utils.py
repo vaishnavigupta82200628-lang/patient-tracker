@@ -1,7 +1,8 @@
 from functools import wraps
 from flask import abort
 from flask_login import current_user
-from io import BytesIO
+from io import BytesIO, StringIO
+import csv
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
@@ -25,6 +26,16 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+def create_notification(user_id, message):
+    """Creates a notification for a specific user. Call this whenever a notify-worthy event happens."""
+    from app.models import Notification
+    from app.extensions import db
+
+    notification = Notification(user_id=user_id, message=message)
+    db.session.add(notification)
+    db.session.commit()
 
 
 def generate_pdf_report(title, subtitle, headers, rows):
@@ -73,12 +84,23 @@ def generate_pdf_report(title, subtitle, headers, rows):
     doc.build(elements)
     buffer.seek(0)
     return buffer
-from app.models import Notification
-from app.extensions import db
 
 
-def create_notification(user_id, message):
-    """Creates a notification for a specific user. Call this whenever a notify-worthy event happens."""
-    notification = Notification(user_id=user_id, message=message)
-    db.session.add(notification)
-    db.session.commit()
+def generate_csv(headers, rows):
+    """
+    Generic CSV generator.
+    - headers: list of column names
+    - rows: list of lists (each inner list is one row)
+    Returns a BytesIO buffer containing CSV data, ready for send_file.
+    """
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(headers)
+    writer.writerows(rows)
+
+    # Convert text buffer to bytes buffer (required for send_file)
+    byte_buffer = BytesIO()
+    byte_buffer.write(output.getvalue().encode('utf-8'))
+    byte_buffer.seek(0)
+
+    return byte_buffer

@@ -4,6 +4,9 @@
 {% block content %}
 <div class="container mt-4">
     <h2 class="mb-4">Welcome, Dr. {{ current_user.name }}</h2>
+    {% if avg_rating %}
+<p class="text-muted">⭐ {{ avg_rating }} / 5 ({{ total_reviews }} review{{ 's' if total_reviews != 1 else '' }})</p>
+{% endif %}
 
     <div class="row g-4 mb-4">
         <div class="col-md-3 col-sm-6">

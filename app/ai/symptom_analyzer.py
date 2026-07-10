@@ -3,38 +3,61 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
 # ==========================================
-# KNOWN SYMPTOM KEYWORDS DATABASE
+# KNOWN SYMPTOM KEYWORDS DATABASE (150+ symptoms, categorized)
 # ==========================================
-# This is our reference list. In a real production system, this could
-# come from a medical database. For our project, we define common symptoms.
 
 SYMPTOM_KEYWORDS = [
     # General
-    'fever', 'headache', 'fatigue', 'weakness', 'chills', 'sweating',
-    'dizziness', 'weight loss', 'loss of appetite', 'insomnia', 'anxiety',
+    'fever', 'high fever', 'mild fever', 'headache', 'severe headache', 'fatigue',
+    'weakness', 'chills', 'sweating', 'night sweats', 'dizziness', 'weight loss',
+    'weight gain', 'loss of appetite', 'increased appetite', 'insomnia', 'anxiety',
+    'restlessness', 'excessive thirst', 'frequent urination', 'malaise', 'lethargy',
+    'drowsiness', 'confusion', 'dehydration', 'pale skin', 'cold sweats', 'hot flashes',
+    'hunger pangs', 'excessive hunger', 'numbness', 'tingling sensation', 'muscle weakness',
+    'swollen glands', 'swollen lymph nodes', 'sensitivity to cold', 'sensitivity to heat',
 
     # Respiratory
-    'cough', 'cold', 'sore throat', 'runny nose', 'sneezing',
-    'shortness of breath', 'difficulty breathing', 'chest pain',
+    'cough', 'dry cough', 'wet cough', 'cold', 'sore throat', 'runny nose', 'blocked nose',
+    'nasal congestion', 'sneezing', 'shortness of breath', 'difficulty breathing', 'wheezing',
+    'chest pain', 'chest tightness', 'congestion', 'hoarseness', 'difficulty swallowing',
 
     # Digestive
-    'nausea', 'vomiting', 'diarrhea', 'constipation', 'stomach pain',
-    'abdominal pain', 'bloating', 'acidity', 'indigestion',
+    'nausea', 'vomiting', 'diarrhea', 'constipation', 'stomach pain', 'abdominal pain',
+    'bloating', 'acidity', 'indigestion', 'heartburn', 'loss of taste', 'loss of smell',
+    'blood in stool', 'gas', 'cramps', 'stomach cramps', 'upset stomach', 'dry mouth',
+    'excessive salivation', 'mouth ulcers', 'bad breath',
 
     # Pain
-    'body pain', 'joint pain', 'muscle pain', 'back pain', 'neck pain',
-    'ear pain', 'eye pain', 'toothache',
+    'body pain', 'joint pain', 'muscle pain', 'back pain', 'neck pain', 'ear pain',
+    'eye pain', 'toothache', 'stiffness', 'leg pain', 'shoulder pain', 'knee pain',
 
-    # Skin / Dermatology
-    'acne', 'pimples', 'oily skin', 'dry skin', 'blackheads', 'whiteheads',
-    'rash', 'itching', 'swelling', 'redness', 'dark spots', 'skin irritation',
-    'acne marks', 'scars', 'inflammation',
+    # Skin
+    'acne', 'pimples', 'oily skin', 'dry skin', 'blackheads', 'whiteheads', 'rash',
+    'itching', 'swelling', 'redness', 'dark spots', 'skin irritation', 'acne marks',
+    'scars', 'inflammation', 'dandruff', 'hair loss', 'hives', 'dry patches',
+    'flaky skin', 'jaundice', 'dark circles',
 
-    # Vision / Eyes
-    'blurred vision', 'sore eyes', 'red eyes', 'watery eyes',
+    # Eyes
+    'blurred vision', 'sore eyes', 'red eyes', 'watery eyes', 'itchy eyes',
+    'eye discharge', 'sensitivity to light', 'dry eyes',
 
-    # Other
-    'hair loss', 'dandruff'
+    # Urinary
+    'burning urination', 'painful urination', 'cloudy urine', 'pelvic pain',
+    'lower abdominal pain', 'dark urine',
+
+    # Cardiac / Circulatory
+    'palpitations', 'high blood pressure', 'low blood pressure', 'irregular heartbeat',
+    'fainting', 'cold hands', 'cold feet',
+
+    # Mental / Sleep
+    'mood swings', 'difficulty concentrating', 'irritability', 'nervousness', 'panic',
+    'trouble sleeping', 'nightmares', 'excessive worry',
+
+    # Ear / Nose / Throat
+    'hearing loss', 'ringing in ears', 'nose bleed',
+
+    # Infection-related patterns
+    'red spots on skin', 'bleeding gums', 'yellowing of skin',
 ]
 
 # Separate single-word and multi-word symptoms for different matching strategies
@@ -51,10 +74,9 @@ def extract_symptoms(text):
         return []
 
     text_lower = text.lower()
-    found_symptoms = set()  # using a set to avoid duplicates
+    found_symptoms = set()
 
-    # Step 1: Check for multi-word symptoms first (e.g. "sore throat", "body pain")
-    # We check these against the raw lowercased text since they're phrases.
+    # Step 1: Check for multi-word symptoms first (phrase-level match on raw text)
     for phrase in MULTI_WORD_SYMPTOMS:
         if phrase in text_lower:
             found_symptoms.add(phrase)

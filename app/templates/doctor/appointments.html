@@ -7,7 +7,8 @@
     <h2>My Appointments</h2>
     <div>
         {% if appointments %}
-        <a href="{{ url_for('doctor.download_appointments_pdf') }}" class="btn btn-success btn-sm me-2">📄 Download PDF</a>
+        <a href="{{ url_for('doctor.download_appointments_pdf') }}" class="btn btn-success btn-sm me-2">📄 PDF</a>
+        <a href="{{ url_for('doctor.export_appointments_csv') }}" class="btn btn-outline-success btn-sm me-2">📊 CSV</a>
         {% endif %}
         <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
     </div>

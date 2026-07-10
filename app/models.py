@@ -56,7 +56,7 @@ class Doctor(db.Model):
 
     appointments = db.relationship('Appointment', backref='doctor', lazy=True)
     medical_records = db.relationship('MedicalRecord', backref='doctor', lazy=True)
-
+    reviews = db.relationship('Review', backref='doctor', lazy=True)
     def __repr__(self):
         return f'<Doctor {self.user.name if self.user else "Unknown"}>'
 
@@ -149,3 +149,19 @@ class Notification(db.Model):
 
     def __repr__(self):
         return f'<Notification {self.id}>'
+# ==========================================
+# REVIEW MODEL (Patient rates Doctor)
+# ==========================================
+class Review(db.Model):
+    __tablename__ = 'reviews'
+
+    id = db.Column(db.Integer, primary_key=True)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)  # 1 to 5
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Review {self.id} - {self.rating} stars>'    
