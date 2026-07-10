@@ -64,9 +64,9 @@ def login():
             if user.role == 'admin':
                 return redirect(url_for('admin.dashboard'))
             elif user.role == 'doctor':
-                return redirect(url_for('doctor.dashboard')) # will become doctor.dashboard in Phase 8
+                return redirect(url_for('doctor.dashboard'))
             elif user.role == 'patient':
-                return redirect(url_for('patient.dashboard'))  # will become patient.dashboard in Phase 9
+                return redirect(url_for('patient.dashboard'))
         else:
             flash('Invalid email or password.', 'danger')
 
@@ -79,3 +79,42 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.home'))
+
+
+@auth_bp.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Step 1: Verify current password is correct
+        if not current_user.check_password(current_password):
+            flash('Current password is incorrect.', 'danger')
+            return render_template('auth/change_password.html')
+
+        # Step 2: Check new password meets minimum requirements
+        if len(new_password) < 6:
+            flash('New password must be at least 6 characters long.', 'danger')
+            return render_template('auth/change_password.html')
+
+        # Step 3: Check new password and confirmation match
+        if new_password != confirm_password:
+            flash('New passwords do not match.', 'danger')
+            return render_template('auth/change_password.html')
+
+        # Step 4: Make sure new password is actually different
+        if current_user.check_password(new_password):
+            flash('New password must be different from your current password.', 'warning')
+            return render_template('auth/change_password.html')
+
+        # All checks passed — update the password
+        current_user.set_password(new_password)
+        db.session.commit()
+
+        flash('Password changed successfully! Please log in again.', 'success')
+        logout_user()
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/change_password.html')
