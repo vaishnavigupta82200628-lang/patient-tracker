@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Notifications</h2>
+
+    {% if notifications %}
+    <div class="list-group">
+        {% for notif in notifications %}
+        <div class="list-group-item {% if not notif.is_read %}list-group-item-light border-start border-primary border-3{% endif %}">
+            <div class="d-flex justify-content-between">
+                <p class="mb-1">{{ notif.message }}</p>
+                <small class="text-muted">{{ notif.created_at.strftime('%d %b, %I:%M %p') }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No notifications yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

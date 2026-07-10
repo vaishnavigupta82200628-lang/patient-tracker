@@ -4,9 +4,14 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Appointments</h2>
+    <h2>My Appointments</h2>
+    <div>
+        {% if appointments %}
+        <a href="{{ url_for('doctor.download_appointments_pdf') }}" class="btn btn-success btn-sm me-2">📄 Download PDF</a>
+        {% endif %}
         <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
     </div>
+</div>
 
     {% if appointments %}
     <table class="table table-hover table-bordered">

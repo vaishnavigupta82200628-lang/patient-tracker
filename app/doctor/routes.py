@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
 
 from app.extensions import db
-from app.models import Doctor, Appointment, Patient, MedicalRecord   # ← MedicalRecord add kiya
-from app.utils import role_required
+from app.models import Doctor, Appointment, Patient, MedicalRecord
+from app.utils import role_required, generate_pdf_report, create_notification
 
 doctor_bp = Blueprint('doctor', __name__, url_prefix='/doctor')
 
@@ -79,8 +79,18 @@ def update_appointment_status(appointment_id, new_status):
 
     appointment.status = new_status
     db.session.commit()
+
+    if new_status in ['approved', 'rejected']:
+        create_notification(
+            user_id=appointment.patient.user_id,
+            message=f"Your appointment with Dr. {doctor.user.name} on "
+                    f"{appointment.date_time.strftime('%d %b, %I:%M %p')} was {new_status}."
+        )
+
     flash(f'Appointment marked as {new_status}.', 'success')
     return redirect(url_for('doctor.appointments'))
+
+
 @doctor_bp.route('/appointments/<int:appointment_id>/add-record', methods=['GET', 'POST'])
 @login_required
 @role_required('doctor')
@@ -120,7 +130,46 @@ def add_record(appointment_id):
         db.session.add(new_record)
         db.session.commit()
 
+        create_notification(
+            user_id=appointment.patient.user_id,
+            message=f"Dr. {doctor.user.name} added a new medical record for your visit on "
+                    f"{appointment.date_time.strftime('%d %b')}."
+        )
+
         flash('Medical record added successfully!', 'success')
         return redirect(url_for('doctor.appointments'))
 
     return render_template('doctor/add_record.html', appointment=appointment)
+
+
+@doctor_bp.route('/appointments/download-pdf')
+@login_required
+@role_required('doctor')
+def download_appointments_pdf():
+    doctor = get_current_doctor()
+    all_appointments = Appointment.query.filter_by(doctor_id=doctor.id).order_by(Appointment.date_time.desc()).all()
+
+    headers = ['Date & Time', 'Patient', 'Status', 'Reason']
+    rows = [
+        [
+            a.date_time.strftime('%d %b %Y, %I:%M %p'),
+            a.patient.user.name,
+            a.status.capitalize(),
+            a.reason or '-'
+        ]
+        for a in all_appointments
+    ]
+
+    pdf_buffer = generate_pdf_report(
+        title="Appointments Report",
+        subtitle=f"Doctor: Dr. {current_user.name}",
+        headers=headers,
+        rows=rows if rows else [['-', 'No appointments found', '-', '-']]
+    )
+
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name=f"appointments_{current_user.name.replace(' ', '_')}.pdf",
+        mimetype='application/pdf'
+    )

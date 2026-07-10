@@ -34,7 +34,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Date & Time</label>
-                    <input type="datetime-local" name="date_time" class="form-control" required>
+                    <input type="datetime-local" name="date_time" id="dateTimeInput" class="form-control" required>
                 </div>
 
                 <div class="mb-3">
@@ -88,5 +88,10 @@
             console.error('Error fetching doctors:', error);
         }
     });
+    // Set minimum date/time to now, preventing past-date selection in the UI
+const dateInput = document.getElementById('dateTimeInput');
+const now = new Date();
+now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+dateInput.min = now.toISOString().slice(0, 16);
 </script>
 {% endblock %}

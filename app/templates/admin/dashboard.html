@@ -40,9 +40,88 @@
         </div>
     </div>
 
-    <div class="mt-5">
+    <div class="mt-4 mb-5">
         <a href="{{ url_for('admin.manage_doctors') }}" class="btn btn-primary me-2">Manage Doctors</a>
         <a href="{{ url_for('admin.manage_patients') }}" class="btn btn-secondary">Manage Patients</a>
     </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Appointments by Status</h5>
+                    <canvas id="appointmentsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Doctors vs Patients</h5>
+                    <canvas id="usersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    async function loadDashboardCharts() {
+        try {
+            const response = await fetch('/api/v1/stats');
+            const stats = await response.json();
+
+            // ---- PIE CHART: Appointments by Status ----
+            const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+            new Chart(appointmentsCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Pending', 'Approved', 'Completed'],
+                    datasets: [{
+                        data: [
+                            stats.pending_appointments,
+                            stats.approved_appointments,
+                            stats.completed_appointments
+                        ],
+                        backgroundColor: ['#ffc107', '#198754', '#0dcaf0']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // ---- BAR CHART: Doctors vs Patients ----
+            const usersCtx = document.getElementById('usersChart').getContext('2d');
+            new Chart(usersCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Doctors', 'Patients'],
+                    datasets: [{
+                        label: 'Total Count',
+                        data: [stats.total_doctors, stats.total_patients],
+                        backgroundColor: ['#0d6efd', '#198754']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('Error loading dashboard charts:', error);
+        }
+    }
+
+    loadDashboardCharts();
+</script>
 {% endblock %}

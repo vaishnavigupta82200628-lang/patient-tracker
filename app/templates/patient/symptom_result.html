@@ -27,6 +27,21 @@
                     {% endfor %}
                 </div>
             </div>
+
+            {% if predicted_disease %}
+            <div class="card mb-4 border-primary">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">AI Prediction:</h6>
+                    <h4 class="text-primary">{{ predicted_disease }}</h4>
+                    <div class="progress mt-2" style="height: 25px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ confidence }}%;">
+                            {{ confidence }}% confidence
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="alert alert-warning">
                 ⚠️ This is not a medical diagnosis. Please consult a doctor for proper evaluation.
             </div>

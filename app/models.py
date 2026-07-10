@@ -25,9 +25,10 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(20), nullable=False)  # 'admin', 'doctor', 'patient'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships: one User can have ONE Doctor profile OR ONE Patient profile
+    # Relationships
     doctor_profile = db.relationship('Doctor', backref='user', uselist=False, cascade='all, delete-orphan')
     patient_profile = db.relationship('Patient', backref='user', uselist=False, cascade='all, delete-orphan')
+    notifications = db.relationship('Notification', backref='user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
         """Hashes the plain-text password before storing it."""
@@ -51,9 +52,8 @@ class Doctor(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     specialization = db.Column(db.String(100))
     qualification = db.Column(db.String(150))
-    availability = db.Column(db.String(200))  # e.g. "Mon-Fri, 9AM-5PM"
+    availability = db.Column(db.String(200))
 
-    # Relationships
     appointments = db.relationship('Appointment', backref='doctor', lazy=True)
     medical_records = db.relationship('MedicalRecord', backref='doctor', lazy=True)
 
@@ -73,7 +73,6 @@ class Patient(db.Model):
     gender = db.Column(db.String(20))
     blood_group = db.Column(db.String(10))
 
-    # Relationships
     appointments = db.relationship('Appointment', backref='patient', lazy=True)
     medical_records = db.relationship('MedicalRecord', backref='patient', lazy=True)
     symptom_logs = db.relationship('SymptomLog', backref='patient', lazy=True)
@@ -92,7 +91,7 @@ class Appointment(db.Model):
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     date_time = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending/approved/completed/cancelled
+    status = db.Column(db.String(20), default='pending')
     reason = db.Column(db.String(300))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
