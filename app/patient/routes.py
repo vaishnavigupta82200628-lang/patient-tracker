@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 
 from app.extensions import db
-from app.models import Patient, Doctor, Appointment, MedicalRecord, SymptomLog
+from app.models import Patient, Doctor, Appointment, MedicalRecord, SymptomLog, Review, RadiologyAppointment
 from app.utils import role_required, generate_pdf_report, create_notification
 from app.ai.symptom_analyzer import extract_symptoms
 from app.ai.disease_predictor import predict_disease
@@ -263,3 +263,37 @@ def rate_doctor(appointment_id):
 
     return render_template('patient/rate_doctor.html', appointment=appointment)
 
+@patient_bp.route('/my-diagnostic-tests')
+@login_required
+@role_required('patient')
+def my_diagnostic_tests():
+    patient = get_current_patient()
+    tests = RadiologyAppointment.query.filter_by(patient_id=patient.id)\
+        .order_by(RadiologyAppointment.created_at.desc()).all()
+    return render_template('patient/diagnostic_tests.html', tests=tests)
+
+
+@patient_bp.route('/diagnostic-test/<int:appointment_id>')
+@login_required
+@role_required('patient')
+def diagnostic_test_detail(appointment_id):
+    patient = get_current_patient()
+    appointment = RadiologyAppointment.query.get_or_404(appointment_id)
+
+    if appointment.patient_id != patient.id:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('patient.my_diagnostic_tests'))
+
+    # Define the full status pipeline for the timeline UI
+    status_pipeline = [
+        'request_submitted', 'payment_completed', 'pending_approval',
+        'slot_assigned', 'report_ready'
+    ]
+    current_index = status_pipeline.index(appointment.status) if appointment.status in status_pipeline else -1
+
+    return render_template(
+        'patient/diagnostic_test_detail.html',
+        appointment=appointment,
+        status_pipeline=status_pipeline,
+        current_index=current_index
+    )

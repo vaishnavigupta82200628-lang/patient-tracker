@@ -1,0 +1,246 @@
+import os
+import uuid
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
+from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
+
+from app.extensions import db
+from app.models import Patient, DiagnosticTest, Prescription
+from app.utils import role_required
+from app.radiology.ocr_utils import extract_text_from_file, check_diagnostic_keywords
+import random
+import string
+from datetime import datetime
+from app.models import Patient, DiagnosticTest, Prescription, RadiologyAppointment, Payment, Invoice
+
+radiology_bp = Blueprint('radiology', __name__, url_prefix='/radiology')
+
+
+def get_current_patient():
+    return Patient.query.filter_by(user_id=current_user.id).first()
+
+
+@radiology_bp.route('/book-test', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def book_test():
+    tests = DiagnosticTest.query.filter_by(is_active=True).all()
+
+    if request.method == 'POST':
+        # Collect all Step 1 form data
+        full_name = request.form.get('full_name')
+        age = request.form.get('age')
+        gender = request.form.get('gender')
+        mobile_number = request.form.get('mobile_number')
+        email = request.form.get('email')
+        hospital_branch = request.form.get('hospital_branch')
+        department = request.form.get('department')
+        test_id = request.form.get('test_id')
+        preferred_date = request.form.get('preferred_date')
+        preferred_time_slot = request.form.get('preferred_time_slot')
+        remarks = request.form.get('remarks')
+
+        # Basic validation
+        if not all([full_name, age, gender, mobile_number, test_id, preferred_date, preferred_time_slot]):
+            flash('Please fill in all required fields.', 'danger')
+            return render_template('radiology/book_test.html', tests=tests)
+
+        # Store Step 1 data in session temporarily (used in Step 2: prescription upload)
+        session['radiology_booking'] = {
+            'full_name': full_name,
+            'age': age,
+            'gender': gender,
+            'mobile_number': mobile_number,
+            'email': email,
+            'hospital_branch': hospital_branch,
+            'department': department,
+            'test_id': test_id,
+            'preferred_date': preferred_date,
+            'preferred_time_slot': preferred_time_slot,
+            'remarks': remarks
+        }
+
+        flash('Details saved! Now please upload your doctor\'s prescription.', 'success')
+        return redirect(url_for('radiology.upload_prescription'))
+
+    return render_template('radiology/book_test.html', tests=tests)
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'pdf'}
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@radiology_bp.route('/upload-prescription', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def upload_prescription():
+    # Make sure Step 1 was completed
+    if 'radiology_booking' not in session:
+        flash('Please fill in the booking details first.', 'warning')
+        return redirect(url_for('radiology.book_test'))
+
+    if request.method == 'POST':
+        if 'prescription_file' not in request.files:
+            flash('Please select a file to upload.', 'danger')
+            return render_template('radiology/upload_prescription.html')
+
+        file = request.files['prescription_file']
+
+        if file.filename == '':
+            flash('No file selected.', 'danger')
+            return render_template('radiology/upload_prescription.html')
+
+        # Validate extension
+        if not allowed_file(file.filename):
+            flash('Invalid file type. Only JPG, PNG, and PDF are allowed.', 'danger')
+            return render_template('radiology/upload_prescription.html')
+
+        # Validate size
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)  # reset pointer after checking size
+        if file_size > MAX_FILE_SIZE_BYTES:
+            flash('File is too large. Maximum size allowed is 10 MB.', 'danger')
+            return render_template('radiology/upload_prescription.html')
+
+        # Generate a safe, unique filename (never trust the original filename)
+        original_filename = secure_filename(file.filename)
+        file_extension = original_filename.rsplit('.', 1)[1].lower()
+        unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
+
+        upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+        file.save(upload_path)
+
+        # Run OCR to extract text and check for diagnostic keywords
+        extracted_text = extract_text_from_file(upload_path, file_extension)
+        keywords_found = check_diagnostic_keywords(extracted_text)
+
+        verification_status = 'verified' if keywords_found else 'pending_verification'
+
+        # Save Prescription record
+        patient = get_current_patient()
+        new_prescription = Prescription(
+            patient_id=patient.id,
+            filename=unique_filename,
+            original_filename=original_filename,
+            file_type=file_extension,
+            extracted_text=extracted_text,
+            verification_status=verification_status
+        )
+        db.session.add(new_prescription)
+        db.session.commit()
+
+        # Store prescription ID in session for the next step (payment)
+        session['radiology_booking']['prescription_id'] = new_prescription.id
+        session.modified = True  # tell Flask the session dict was changed
+
+        if keywords_found:
+            flash(f'Prescription uploaded and verified! Detected: {", ".join(keywords_found)}', 'success')
+        else:
+            flash('Prescription uploaded. It will be manually verified by our staff.', 'info')
+
+        return redirect(url_for('radiology.payment'))
+
+    return render_template('radiology/upload_prescription.html')
+
+def generate_booking_id():
+    """Generates a unique, human-readable booking ID like RAD-A1B2C3"""
+    random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return f"RAD-{random_part}"
+
+
+def generate_token_number():
+    """Generates a short daily token number"""
+    random_part = ''.join(random.choices(string.digits, k=4))
+    return f"TKN-{random_part}"
+
+
+def generate_invoice_number():
+    random_part = ''.join(random.choices(string.digits, k=8))
+    return f"INV-{random_part}"
+
+
+@radiology_bp.route('/payment', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def payment():
+    if 'radiology_booking' not in session or 'prescription_id' not in session.get('radiology_booking', {}):
+        flash('Please complete the previous steps first.', 'warning')
+        return redirect(url_for('radiology.book_test'))
+
+    booking_data = session['radiology_booking']
+    test = DiagnosticTest.query.get(int(booking_data['test_id']))
+
+    if request.method == 'POST':
+        # Simulate payment processing (no real card validation)
+        card_number = request.form.get('card_number')
+        if not card_number or len(card_number.replace(' ', '')) < 12:
+            flash('Please enter a valid card number.', 'danger')
+            return render_template('radiology/payment.html', test=test)
+
+        patient = get_current_patient()
+
+        # ---- Create the actual RadiologyAppointment now that all data is ready ----
+        new_appointment = RadiologyAppointment(
+            booking_id=generate_booking_id(),
+            token_number=generate_token_number(),
+            patient_id=patient.id,
+            test_id=test.id,
+            prescription_id=booking_data['prescription_id'],
+            full_name=booking_data['full_name'],
+            age=int(booking_data['age']),
+            gender=booking_data['gender'],
+            mobile_number=booking_data['mobile_number'],
+            email=booking_data.get('email'),
+            hospital_branch=booking_data['hospital_branch'],
+            department=booking_data.get('department'),
+            preferred_date=datetime.strptime(booking_data['preferred_date'], '%Y-%m-%d').date(),
+            preferred_time_slot=booking_data['preferred_time_slot'],
+            remarks=booking_data.get('remarks'),
+            status='pending_approval'
+        )
+        db.session.add(new_appointment)
+        db.session.commit()
+
+        # ---- Create simulated Payment record ----
+        new_payment = Payment(
+            radiology_appointment_id=new_appointment.id,
+            amount=test.base_price,
+            status='paid',
+            transaction_id=f"TXN-{uuid.uuid4().hex[:12].upper()}",
+            paid_at=datetime.utcnow()
+        )
+        db.session.add(new_payment)
+
+        # ---- Create Invoice ----
+        new_invoice = Invoice(
+            invoice_number=generate_invoice_number(),
+            radiology_appointment_id=new_appointment.id,
+            amount=test.base_price
+        )
+        db.session.add(new_invoice)
+        db.session.commit()
+
+        # Clear session data — booking is now fully saved in the database
+        session.pop('radiology_booking', None)
+
+        flash('Payment successful! Your appointment request has been submitted for approval.', 'success')
+        return redirect(url_for('radiology.confirmation', appointment_id=new_appointment.id))
+
+    return render_template('radiology/payment.html', test=test)
+
+
+@radiology_bp.route('/confirmation/<int:appointment_id>')
+@login_required
+@role_required('patient')
+def confirmation(appointment_id):
+    patient = get_current_patient()
+    appointment = RadiologyAppointment.query.get_or_404(appointment_id)
+
+    if appointment.patient_id != patient.id:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('patient.dashboard'))
+
+    return render_template('radiology/confirmation.html', appointment=appointment)

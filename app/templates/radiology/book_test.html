@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block title %}Book Diagnostic Test{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📷 Book Diagnostic Test</h2>
+        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+    </div>
+
+    <div class="alert alert-info">
+        ℹ️ A valid doctor's prescription will be required in the next step. Please have it ready (image or PDF).
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <!-- Progress indicator -->
+            <div class="mb-4">
+                <span class="badge bg-primary">Step 1: Patient Details</span>
+                <span class="badge bg-secondary">Step 2: Prescription</span>
+                <span class="badge bg-secondary">Step 3: Payment</span>
+                <span class="badge bg-secondary">Step 4: Confirmation</span>
+            </div>
+
+            <form method="POST">
+                <h5 class="mb-3">Patient Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="full_name" class="form-control" value="{{ current_user.name }}" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Age *</label>
+                        <input type="number" name="age" class="form-control" min="0" max="120" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Gender *</label>
+                        <select name="gender" class="form-select" required>
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mobile Number *</label>
+                        <input type="tel" name="mobile_number" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ current_user.email }}">
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <h5 class="mb-3">Test Details</h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Hospital Branch *</label>
+                        <select name="hospital_branch" class="form-select" required>
+                            <option value="">Select Branch</option>
+                            <option value="Main Branch">Main Branch</option>
+                            <option value="City Center Branch">City Center Branch</option>
+                            <option value="North Branch">North Branch</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Department</label>
+                        <select name="department" class="form-select">
+                            <option value="">Select Department</option>
+                            <option value="Radiology">Radiology</option>
+                            <option value="Orthopedics">Orthopedics</option>
+                            <option value="Neurology">Neurology</option>
+                            <option value="Cardiology">Cardiology</option>
+                            <option value="General Medicine">General Medicine</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Select Test Type *</label>
+                    <select name="test_id" class="form-select" required>
+                        <option value="">Select Test</option>
+                        {% for test in tests %}
+                        <option value="{{ test.id }}">{{ test.name }} (₹{{ test.base_price }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Preferred Date *</label>
+                        <input type="date" name="preferred_date" id="preferredDate" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Preferred Time Slot *</label>
+                        <select name="preferred_time_slot" class="form-select" required>
+                            <option value="">Select Slot</option>
+                            <option value="9:00 AM - 11:00 AM">9:00 AM - 11:00 AM</option>
+                            <option value="11:00 AM - 1:00 PM">11:00 AM - 1:00 PM</option>
+                            <option value="2:00 PM - 4:00 PM">2:00 PM - 4:00 PM</option>
+                            <option value="4:00 PM - 6:00 PM">4:00 PM - 6:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Additional Remarks</label>
+                    <textarea name="remarks" class="form-control" rows="2" placeholder="Any additional information..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Continue to Prescription Upload →</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Prevent selecting past dates
+    const dateInput = document.getElementById('preferredDate');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+</script>
+{% endblock %}

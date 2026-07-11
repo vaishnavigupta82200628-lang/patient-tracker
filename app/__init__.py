@@ -22,6 +22,8 @@ def create_app():
     from app.patient.routes import patient_bp
     from app.api.routes import api_bp 
     from app.notifications.routes import notifications_bp  # ← NEW
+    from app.radiology.routes import radiology_bp
+    from app.radiologist.routes import radiologist_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -29,7 +31,9 @@ def create_app():
     app.register_blueprint(doctor_bp)
     app.register_blueprint(patient_bp)
     app.register_blueprint(api_bp) 
-    app.register_blueprint(notifications_bp)       # ← NEW
+    app.register_blueprint(notifications_bp)  
+    app.register_blueprint(radiology_bp)
+    app.register_blueprint(radiologist_bp)     # ← NEW
 
     with app.app_context():
         db.create_all()

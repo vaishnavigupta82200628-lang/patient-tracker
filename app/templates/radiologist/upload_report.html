@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Upload Report{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Upload Report — {{ appointment.booking_id }}</h2>
+        <a href="{{ url_for('radiologist.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="mb-1"><strong>Patient:</strong> {{ appointment.full_name }}</p>
+            <p class="mb-1"><strong>Test:</strong> {{ appointment.test.name }}</p>
+            <p class="mb-0"><strong>Date:</strong> {{ appointment.scheduled_date.strftime('%d %b %Y') }}</p>
+        </div>
+    </div>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label">Findings / Report</label>
+            <textarea name="findings" class="form-control" rows="6" required
+                      placeholder="Enter detailed findings from the diagnostic test..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-success w-100">Submit Report & Mark Complete</button>
+    </form>
+</div>
+{% endblock %}

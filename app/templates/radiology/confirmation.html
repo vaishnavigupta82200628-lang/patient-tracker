@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Booking Confirmed{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+
+            <div class="text-center mb-4">
+                <div style="font-size: 4rem;">✅</div>
+                <h2 class="text-success">Appointment Request Submitted!</h2>
+                <p class="text-muted">Your request is now pending approval from our staff.</p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Booking Details</h5>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Booking ID</div>
+                        <div class="col-6"><strong>{{ appointment.booking_id }}</strong></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Token Number</div>
+                        <div class="col-6"><strong>{{ appointment.token_number }}</strong></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Test</div>
+                        <div class="col-6">{{ appointment.test.name }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Preferred Date</div>
+                        <div class="col-6">{{ appointment.preferred_date.strftime('%d %b %Y') }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Time Slot</div>
+                        <div class="col-6">{{ appointment.preferred_time_slot }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-6 text-muted">Status</div>
+                        <div class="col-6"><span class="badge bg-warning">Pending Approval</span></div>
+                    </div>
+                </div>
+            </div>
+
+            {% if appointment.test.preparation_instructions %}
+            <div class="alert alert-info">
+                <strong>📋 Preparation Instructions:</strong><br>
+                {{ appointment.test.preparation_instructions }}
+            </div>
+            {% endif %}
+
+            <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary w-100">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Manage Radiologists{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Radiologists</h2>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Add New Radiologist</h5>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required minlength="6">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Specialization</label>
+                            <input type="text" name="specialization" class="form-control" placeholder="e.g. MRI Specialist">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Add Radiologist</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <h5 class="mb-3">Existing Radiologists</h5>
+            {% if radiologists %}
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Specialization</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rad in radiologists %}
+                    <tr>
+                        <td>Dr. {{ rad.user.name }}</td>
+                        <td>{{ rad.user.email }}</td>
+                        <td>{{ rad.specialization or 'Not set' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-muted">No radiologists added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

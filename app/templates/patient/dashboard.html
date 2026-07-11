@@ -40,9 +40,11 @@
 
     <div class="mt-4">
        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-success me-2">Book Appointment</a>
+       <a href="{{ url_for('radiology.book_test') }}" class="btn btn-info me-2">📷 Book Diagnostic Test</a>
        <a href="{{ url_for('patient.symptom_checker') }}" class="btn btn-warning me-2">🤖 AI Symptom Checker</a>
         <a href="{{ url_for('patient.records') }}" class="btn btn-secondary me-2">Medical Records</a>
         <a href="{{ url_for('patient.profile') }}" class="btn btn-outline-primary">Edit Profile</a>
+        <a href="{{ url_for('patient.my_diagnostic_tests') }}" class="btn btn-outline-info me-2">📷 My Diagnostic Tests</a>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Upload Prescription{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📄 Upload Prescription</h2>
+        <a href="{{ url_for('radiology.book_test') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+    </div>
+
+    <div class="mb-4">
+        <span class="badge bg-secondary">Step 1: Patient Details</span>
+        <span class="badge bg-primary">Step 2: Prescription</span>
+        <span class="badge bg-secondary">Step 3: Payment</span>
+        <span class="badge bg-secondary">Step 4: Confirmation</span>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="alert alert-warning">
+                ⚠️ A doctor's prescription is mandatory to proceed. Accepted formats: JPG, PNG, PDF (max 10 MB).
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div class="mb-3">
+                    <label class="form-label">Upload Prescription *</label>
+                    <input type="file" name="prescription_file" id="fileInput" class="form-control"
+                           accept=".jpg,.jpeg,.png,.pdf" required>
+                    <small class="text-muted">Maximum file size: 10 MB</small>
+                </div>
+
+                <div id="fileNameDisplay" class="mb-3 text-muted"></div>
+
+                <button type="submit" class="btn btn-primary w-100" id="continueBtn" disabled>
+                    Continue to Payment →
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const continueBtn = document.getElementById('continueBtn');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+    fileInput.addEventListener('change', function () {
+        if (this.files.length > 0) {
+            const file = this.files[0];
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileNameDisplay.textContent = `Selected: ${file.name} (${sizeMB} MB)`;
+            continueBtn.disabled = false;
+        } else {
+            fileNameDisplay.textContent = '';
+            continueBtn.disabled = true;
+        }
+    });
+</script>
+{% endblock %}
