@@ -49,6 +49,15 @@
             </div>
             {% endif %}
 
+            <div class="text-center mb-4">
+                <img src="{{ url_for('radiology.generate_qr_code', appointment_id=appointment.id) }}"
+                     alt="QR Code" style="width: 150px; height: 150px;">
+                <p class="text-muted small mt-1">Scan this QR code at reception</p>
+            </div>
+
+            <a href="{{ url_for('radiology.download_receipt_pdf', appointment_id=appointment.id) }}"
+               class="btn btn-outline-primary w-100 mb-2">📄 Download Receipt (PDF)</a>
+
             <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary w-100">Back to Dashboard</a>
         </div>
     </div>

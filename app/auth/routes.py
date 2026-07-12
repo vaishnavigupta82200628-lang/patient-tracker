@@ -67,6 +67,10 @@ def login():
                 return redirect(url_for('doctor.dashboard'))
             elif user.role == 'patient':
                 return redirect(url_for('patient.dashboard'))
+            elif user.role == 'radiologist':
+                return redirect(url_for('radiologist.dashboard'))
+            else:
+                return redirect(url_for('main.home'))
         else:
             flash('Invalid email or password.', 'danger')
 

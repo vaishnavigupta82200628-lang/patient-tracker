@@ -5,7 +5,11 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>{{ appointment.booking_id }}</h2>
-        <a href="{{ url_for('patient.my_diagnostic_tests') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+        <div>
+            <a href="{{ url_for('radiology.download_receipt_pdf', appointment_id=appointment.id) }}"
+               class="btn btn-success btn-sm me-2">📄 Download Receipt</a>
+            <a href="{{ url_for('patient.my_diagnostic_tests') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+        </div>
     </div>
 
     {% if appointment.status == 'rejected' %}
