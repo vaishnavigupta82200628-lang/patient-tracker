@@ -55,3 +55,44 @@ A full-stack, AI-powered hospital management platform built for Smart India Hack
 ---
 
 ## 📁 Project Structure
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Python 3.10+
+- [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) installed locally
+- [Poppler](https://github.com/oschwartz10612/poppler-windows/releases) installed locally
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd patient-tracker
+
+# Create and activate a virtual environment
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # macOS/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Update Tesseract/Poppler paths in config.py to match your local installation
+
+# Seed initial data
+python seed_admin.py
+python seed_radiology_data.py
+
+# Train the ML disease prediction model
+python app/ai/train_model.py
+
+# Run the application
+python run.py
+```
+
+Visit `http://127.0.0.1:5000` in your browser.
+
+### Default Admin Login
