@@ -96,3 +96,25 @@ python run.py
 Visit `http://127.0.0.1:5000` in your browser.
 
 ### Default Admin Login
+
+*(Change this immediately after first login.)*
+
+---
+
+## 🔐 Security Highlights
+- Passwords hashed with Werkzeug (never stored in plaintext)
+- Role-based access control enforced on every protected route
+- Ownership checks to prevent unauthorized data access (IDOR protection)
+- Secure file uploads with UUID filenames, extension whitelisting, and size limits
+- CSRF protection via Flask-WTF on all forms
+- Server-side validation on every input, regardless of client-side checks
+
+---
+
+## 📄 License
+Built for academic and hackathon purposes as part of Smart India Hackathon.
+
+---
+
+## 🙏 Acknowledgements
+Developed as a B.Voc AI & Robotics project, demonstrating full-stack development, applied AI/ML, and secure software engineering practices.
