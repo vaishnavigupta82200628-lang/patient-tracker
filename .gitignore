@@ -5,3 +5,9 @@ __pycache__/
 instance/
 *.db
 app/static/uploads/
+ml/data/
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.h5
