@@ -1,76 +1,142 @@
 {% extends 'base.html' %}
-{% block title %}My Appointments{% endblock %}
+{% block title %}Doctor Appointments — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>My Appointments</h2>
-    <div>
-        {% if appointments %}
-        <a href="{{ url_for('doctor.download_appointments_pdf') }}" class="btn btn-success btn-sm me-2">📄 PDF</a>
-        <a href="{{ url_for('doctor.export_appointments_csv') }}" class="btn btn-outline-success btn-sm me-2">📊 CSV</a>
-        {% endif %}
-        <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success">Doctor Schedule</span>
+                <span class="text-muted small">&bull; Appointment Management</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-calendar-check-fill text-success me-2"></i>My Consultations & Appointments</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if appointments %}
+            <a href="{{ url_for('doctor.download_appointments_pdf') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-file-earmark-pdf-fill"></i> PDF Report
+            </a>
+            <a href="{{ url_for('doctor.export_appointments_csv') }}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export CSV
+            </a>
+            {% endif %}
+            <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
     </div>
-</div>
 
     {% if appointments %}
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Patient</th>
-                <th>Date & Time</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for appt in appointments %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ appt.patient.user.name }}</td>
-                <td>{{ appt.date_time.strftime('%d %b %Y, %I:%M %p') }}</td>
-                <td>{{ appt.reason or 'Not specified' }}</td>
-                <td>
-                    {% if appt.status == 'pending' %}
-                        <span class="badge bg-warning">Pending</span>
-                    {% elif appt.status == 'approved' %}
-                        <span class="badge bg-success">Approved</span>
-                    {% elif appt.status == 'completed' %}
-                        <span class="badge bg-info">Completed</span>
-                    {% elif appt.status == 'rejected' %}
-                        <span class="badge bg-danger">Rejected</span>
-                    {% endif %}
-                </td>
-                <td>
-    {% if appt.status == 'pending' %}
-    <form action="{{ url_for('doctor.update_appointment_status', appointment_id=appt.id, new_status='approved') }}"
-          method="POST" class="d-inline">
-        <button type="submit" class="btn btn-success btn-sm">Approve</button>
-    </form>
-    <form action="{{ url_for('doctor.update_appointment_status', appointment_id=appt.id, new_status='rejected') }}"
-          method="POST" class="d-inline">
-        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-    </form>
-    {% elif appt.status == 'approved' %}
-    <form action="{{ url_for('doctor.update_appointment_status', appointment_id=appt.id, new_status='completed') }}"
-          method="POST" class="d-inline">
-        <button type="submit" class="btn btn-info btn-sm">Mark Completed</button>
-    </form>
-    {% elif appt.status == 'completed' %}
-        <a href="{{ url_for('doctor.add_record', appointment_id=appt.id) }}" class="btn btn-primary btn-sm">Add Record</a>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">Appointment Ledger ({{ appointments|length }})</span>
+            <span class="badge bg-secondary">Total: {{ appointments|length }} Bookings</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Patient Name</th>
+                            <th>Date & Time</th>
+                            <th>Reason for Consultation</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                        <tr>
+                            <td class="text-muted fw-bold">{{ loop.index }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon primary p-0" style="width: 36px; height: 36px; font-size: 1rem;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ appt.patient.user.name }}</div>
+                                        <small class="text-muted">{{ appt.patient.user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div><i class="bi bi-calendar3 text-muted me-1"></i>{{ appt.date_time.strftime('%d %b %Y') }}</div>
+                                <small class="text-primary fw-medium"><i class="bi bi-clock me-1"></i>{{ appt.date_time.strftime('%I:%M %p') }}</small>
+                            </td>
+                            <td>
+                                <span class="small text-secondary">{{ appt.reason or 'General Medical Consultation' }}</span>
+                            </td>
+                            <td>
+                                {% if appt.status == 'pending' %}
+                                    <span class="badge bg-warning-soft">
+                                        <i class="bi bi-hourglass-split me-1"></i> Pending
+                                    </span>
+                                {% elif appt.status == 'approved' %}
+                                    <span class="badge bg-success-soft">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Approved
+                                    </span>
+                                {% elif appt.status == 'completed' %}
+                                    <span class="badge bg-info-soft">
+                                        <i class="bi bi-check2-all me-1"></i> Completed
+                                    </span>
+                                {% elif appt.status == 'rejected' %}
+                                    <span class="badge bg-danger-soft">
+                                        <i class="bi bi-x-circle-fill me-1"></i> Rejected
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if appt.status == 'pending' %}
+                                <div class="d-inline-flex gap-1">
+                                    <form action="{{ url_for('doctor.update_appointment_status', appointment_id=appt.id, new_status='approved') }}"
+                                          method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-success btn-sm" title="Approve appointment">
+                                            <i class="bi bi-check-lg"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('doctor.update_appointment_status', appointment_id=appt.id, new_status='rejected') }}"
+                                          method="POST" class="d-inline" onsubmit="return confirm('Reject this appointment?');">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Reject appointment">
+                                            <i class="bi bi-x-lg"></i> Reject
+                                        </button>
+                                    </form>
+                                </div>
+                                {% elif appt.status == 'approved' %}
+                                <form action="{{ url_for('doctor.update_appointment_status', appointment_id=appt.id, new_status='completed') }}"
+                                      method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-info btn-sm text-white" title="Mark consultation completed">
+                                        <i class="bi bi-check-all"></i> Mark Completed
+                                    </button>
+                                </form>
+                                {% elif appt.status == 'completed' %}
+                                <a href="{{ url_for('doctor.add_record', appointment_id=appt.id) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-file-earmark-plus"></i> Add Record
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">No actions</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-        <span class="text-muted">No actions</span>
-    {% endif %}
-</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p class="text-muted">No appointments yet.</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-calendar-x"></i>
+        </div>
+        <h4 class="empty-state-title">No Appointments Scheduled</h4>
+        <p class="empty-state-desc">You do not have any patient appointment bookings at this time. Once patients book consultations with you, they will appear here.</p>
+        <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -1,59 +1,166 @@
 {% extends 'base.html' %}
-{% block title %}Payment{% endblock %}
+{% block title %}Diagnostic Payment — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>💳 Payment</h2>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Radiology & Imaging</span>
+                <span class="text-muted small">&bull; Step 3 of 4</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-credit-card-fill text-primary me-2"></i>Diagnostic Fee Payment</h2>
+        </div>
+        <a href="{{ url_for('radiology.book_test') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Restart
+        </a>
     </div>
 
-    <div class="mb-4">
-        <span class="badge bg-secondary">Step 1: Patient Details</span>
-        <span class="badge bg-secondary">Step 2: Prescription</span>
-        <span class="badge bg-primary">Step 3: Payment</span>
-        <span class="badge bg-secondary">Step 4: Confirmation</span>
+    <!-- Multi-Step Wizard Top Stepper -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body p-4">
+            <div class="booking-stepper mb-0">
+                <div class="booking-step-item completed">
+                    <div class="booking-step-circle"><i class="bi bi-check-lg"></i></div>
+                    <div class="booking-step-label">Patient Details</div>
+                </div>
+                <div class="booking-step-item completed">
+                    <div class="booking-step-circle"><i class="bi bi-check-lg"></i></div>
+                    <div class="booking-step-label">Prescription</div>
+                </div>
+                <div class="booking-step-item active">
+                    <div class="booking-step-circle">3</div>
+                    <div class="booking-step-label">Payment</div>
+                </div>
+                <div class="booking-step-item">
+                    <div class="booking-step-circle">4</div>
+                    <div class="booking-step-label">Confirmation</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card mb-4">
+    <div class="row g-4 justify-content-center">
+        <!-- Left: Order Summary & Interactive Visual Card -->
+        <div class="col-lg-5 col-md-10">
+            <!-- Order Summary Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-receipt text-primary me-2"></i>Order Summary</span>
+                    <span class="badge bg-primary-soft">Diagnostic Fee</span>
+                </div>
                 <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">Order Summary</h6>
-                    <div class="d-flex justify-content-between">
-                        <span>{{ test.name }}</span>
-                        <strong>₹{{ test.base_price }}</strong>
+                    <div class="d-flex justify-content-between align-items-center pb-3 border-bottom mb-3">
+                        <div>
+                            <div class="fw-bold fs-6">{{ test.name }}</div>
+                            <small class="text-muted">Standard Hospital Diagnostic Fee</small>
+                        </div>
+                        <span class="fw-bold text-dark fs-5">₹{{ test.base_price }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
+                        <span>Convenience & Verification Fee</span>
+                        <span class="text-success fw-bold">FREE (₹0)</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <span class="fw-bold fs-6">Total Payable:</span>
+                        <span class="fw-bold text-primary fs-4">₹{{ test.base_price }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="alert alert-secondary">
-                🔒 This is a simulated payment for demonstration purposes. No real transaction will occur.
+            <!-- Realistic Credit Card Preview Visual (Updated dynamically by main.js) -->
+            <div class="credit-card-preview">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="card-chip"></div>
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-wifi fs-4 opacity-75"></i>
+                        <span class="fw-bold text-uppercase ms-2 small letter-spacing-1">MED-PAY</span>
+                    </div>
+                </div>
+
+                <div class="card-number-display my-3" id="cardDisplayNumber">
+                    •••• •••• •••• ••••
+                </div>
+
+                <div class="d-flex justify-content-between align-items-end">
+                    <div>
+                        <div class="small opacity-50" style="font-size: 0.65rem;">CARDHOLDER</div>
+                        <div class="card-holder-display" id="cardDisplayHolder">
+                            {{ current_user.name.upper() }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small opacity-50" style="font-size: 0.65rem;">EXPIRES</div>
+                        <div class="card-expiry-display" id="cardDisplayExpiry">
+                            MM/YY
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Card Number</label>
-                    <input type="text" name="card_number" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19" required>
-                </div>
+            <div class="alert alert-secondary small d-flex align-items-center gap-2 border-0">
+                <i class="bi bi-shield-check text-success fs-5"></i>
+                <span>Simulated payment environment for demonstration purposes.</span>
+            </div>
+        </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Expiry Date</label>
-                        <input type="text" name="expiry" class="form-control" placeholder="MM/YY" maxlength="5">
+        <!-- Right: Payment Form -->
+        <div class="col-lg-6 col-md-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-lock-fill"></i>
+                    <span class="fw-semibold">Secure Payment Gateway</span>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Card Number *</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-credit-card text-muted"></i></span>
+                                <input type="text" name="card_number" class="form-control" 
+                                       placeholder="1234 5678 9012 3456" maxlength="19" required>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.78rem;">Visa, MasterCard, RuPay accepted.</small>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Expiration Date</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar-event text-muted"></i></span>
+                                    <input type="text" name="expiry" class="form-control" placeholder="MM/YY" maxlength="5">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">CVV / CVC</label>
+                                <div class="input-group password-field-wrapper">
+                                    <span class="input-group-text"><i class="bi bi-shield-lock text-muted"></i></span>
+                                    <input type="password" name="cvv" class="form-control" placeholder="123" maxlength="4">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Cardholder Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                <input type="text" name="cardholder_name" class="form-control" value="{{ current_user.name }}">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 py-3 fw-bold fs-6">
+                            <i class="bi bi-lock-fill me-1"></i> Pay ₹{{ test.base_price }} & Finalize Booking
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3 text-muted small">
+                        <i class="bi bi-shield-lock-fill text-success me-1"></i> 256-bit SSL Encrypted Transaction
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">CVV</label>
-                        <input type="text" name="cvv" class="form-control" placeholder="123" maxlength="3">
-                    </div>
                 </div>
-
-                <div class="mb-4">
-                    <label class="form-label">Cardholder Name</label>
-                    <input type="text" name="cardholder_name" class="form-control" value="{{ current_user.name }}">
-                </div>
-
-                <button type="submit" class="btn btn-success w-100">Pay ₹{{ test.base_price }}</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>

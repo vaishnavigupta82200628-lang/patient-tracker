@@ -1,53 +1,98 @@
 {% extends 'base.html' %}
-{% block title %}My Profile{% endblock %}
+{% block title %}Patient Profile — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Profile</h2>
-        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Patient Demographics</span>
+                <span class="text-muted small">&bull; Health Profile</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-person-circle text-primary me-2"></i>My Medical Profile</h2>
+        </div>
+        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" class="form-control" value="{{ current_user.name }}" disabled>
-                </div>
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <!-- Patient ID Badge Header -->
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4 bg-surface-subtle border">
+                        <div class="stat-icon primary" style="width: 54px; height: 54px; font-size: 1.6rem;">
+                            <i class="bi bi-person-heart"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">{{ current_user.name }}</h5>
+                            <span class="text-muted small">{{ current_user.email }}</span>
+                        </div>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
-                </div>
+                    <form method="POST">
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                    <input type="text" class="form-control" value="{{ current_user.name }}" disabled>
+                                </div>
+                            </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Age</label>
-                    <input type="number" name="age" class="form-control" value="{{ patient.age or '' }}" min="0" max="120">
-                </div>
+                            <div class="col-sm-6">
+                                <label class="form-label">Registered Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                                    <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Gender</label>
-                    <select name="gender" class="form-select">
-                        <option value="" {% if not patient.gender %}selected{% endif %}>Select Gender</option>
-                        <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
-                        <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
-                        <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
-                    </select>
-                </div>
+                        <div class="mb-3">
+                            <label class="form-label">Age (in years)</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar-heart text-muted"></i></span>
+                                <input type="number" name="age" class="form-control" value="{{ patient.age or '' }}" min="0" max="120" placeholder="e.g. 28">
+                            </div>
+                            <small class="text-muted" style="font-size: 0.78rem;">Needed to assess age-appropriate dosage guidelines.</small>
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Blood Group</label>
-                    <select name="blood_group" class="form-select">
-                        <option value="">Select Blood Group</option>
-                        {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
-                        <option value="{{ bg }}" {% if patient.blood_group == bg %}selected{% endif %}>{{ bg }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                        <div class="mb-3">
+                            <label class="form-label">Gender</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-gender-ambiguous text-muted"></i></span>
+                                <select name="gender" class="form-select">
+                                    <option value="" {% if not patient.gender %}selected{% endif %}>Select Gender</option>
+                                    <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+                                    <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+                                    <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
 
-                <button type="submit" class="btn btn-primary w-100">Save Profile</button>
-            </form>
+                        <div class="mb-4">
+                            <label class="form-label">Blood Group</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-droplet text-danger"></i></span>
+                                <select name="blood_group" class="form-select">
+                                    <option value="">Select Blood Group</option>
+                                    {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                                    <option value="{{ bg }}" {% if patient.blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.78rem;">Critical information for emergency care and diagnostic procedures.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="bi bi-check-lg"></i> Update Health Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

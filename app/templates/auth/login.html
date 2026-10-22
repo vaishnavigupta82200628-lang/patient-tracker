@@ -1,32 +1,98 @@
 {% extends 'base.html' %}
-{% block title %}Login{% endblock %}
+{% block title %}Sign In — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <h2 class="mb-4">Login</h2>
-        <form method="POST" novalidate>
-            {{ form.hidden_tag() }}
+<div class="container py-4">
+    <div class="card overflow-hidden shadow-lg border-0 my-3" style="max-width: 960px; margin: 0 auto; border-radius: var(--radius-xl);">
+        <div class="row g-0">
+            <!-- Left Side: Medical Artwork & Value Proposition -->
+            <div class="col-lg-5 d-none d-lg-flex flex-column justify-content-between p-5 text-white" 
+                 style="background: var(--primary-gradient); position: relative; overflow: hidden;">
+                
+                <!-- Background decorative rings -->
+                <div style="position: absolute; top: -50px; right: -50px; width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,0.08);"></div>
+                <div style="position: absolute; bottom: -80px; left: -50px; width: 280px; height: 280px; border-radius: 50%; background: rgba(255,255,255,0.06);"></div>
 
-            <div class="mb-3">
-                {{ form.email.label(class="form-label") }}
-                {{ form.email(class="form-control") }}
-                {% for error in form.email.errors %}
-                    <small class="text-danger">{{ error }}</small>
-                {% endfor %}
+                <div style="position: relative; z-index: 2;">
+                    <div class="d-inline-flex align-items-center gap-2 mb-4 px-3 py-1 rounded-pill" style="background: rgba(255,255,255,0.18); backdrop-filter: blur(8px);">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <span class="small fw-semibold">Secure Healthcare Gateway</span>
+                    </div>
+                    <h2 class="fw-bold text-white mb-3">Welcome to Patient Tracker</h2>
+                    <p class="text-white-50" style="font-size: 0.95rem; line-height: 1.6;">
+                        Sign in to access your consultations, medical diagnostic history, AI symptom checker, and hospital appointment schedules.
+                    </p>
+                </div>
+
+                <div class="my-4" style="position: relative; z-index: 2;">
+                    <svg viewBox="0 0 240 160" width="100%" height="auto">
+                        <circle cx="120" cy="80" r="60" fill="rgba(255,255,255,0.1)"/>
+                        <path d="M 30,80 L 70,80 L 85,55 L 100,105 L 115,70 L 125,90 L 140,80 L 210,80" 
+                              fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="120" cy="80" r="14" fill="#FFFFFF"/>
+                        <path d="M 115,80 L 125,80 M 120,75 L 120,85" stroke="#0B5ED7" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <div style="position: relative; z-index: 2;">
+                    <div class="d-flex align-items-center gap-3 text-white-50 small">
+                        <span><i class="bi bi-check2-circle text-white"></i> HIPAA Ready</span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-check2-circle text-white"></i> 256-bit SSL</span>
+                        <span>&bull;</span>
+                        <span><i class="bi bi-check2-circle text-white"></i> Smart AI</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-control") }}
-                {% for error in form.password.errors %}
-                    <small class="text-danger">{{ error }}</small>
-                {% endfor %}
-            </div>
+            <!-- Right Side: Clean Login Form -->
+            <div class="col-lg-7 p-4 p-md-5 d-flex align-items-center bg-surface">
+                <div class="w-100" style="max-width: 440px; margin: 0 auto;">
+                    <div class="mb-4">
+                        <span class="badge bg-primary mb-2">Hospital Portal</span>
+                        <h3 class="fw-bold mb-1">Account Sign In</h3>
+                        <p class="text-muted small">Enter your registered email and password to proceed.</p>
+                    </div>
 
-            {{ form.submit(class="btn btn-primary w-100") }}
-        </form>
-        <p class="mt-3">Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="name@hospital.com") }}
+                            </div>
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                {{ form.password.label(class="form-label mb-0") }}
+                            </div>
+                            <div class="input-group password-field-wrapper">
+                                <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••") }}
+                            </div>
+                            {% for error in form.password.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        {{ form.submit(class="btn btn-primary w-100 py-2 fw-semibold") }}
+                    </form>
+
+                    <div class="text-center mt-4 pt-2 border-top">
+                        <p class="text-muted small mb-0">
+                            Don't have an account yet? 
+                            <a href="{{ url_for('auth.register') }}" class="fw-semibold text-primary">Create an account</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

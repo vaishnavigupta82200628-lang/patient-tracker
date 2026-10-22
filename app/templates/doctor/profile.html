@@ -1,47 +1,91 @@
 {% extends 'base.html' %}
-{% block title %}My Profile{% endblock %}
+{% block title %}Doctor Profile — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Profile</h2>
-        <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success">Practice Credentials</span>
+                <span class="text-muted small">&bull; Physician Profile</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-person-circle text-success me-2"></i>My Doctor Profile</h2>
+        </div>
+        <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" class="form-control" value="{{ current_user.name }}" disabled>
-                    <small class="text-muted">Contact admin to change your name.</small>
-                </div>
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <!-- Physician Badge Header -->
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4 bg-surface-subtle border">
+                        <div class="stat-icon success" style="width: 54px; height: 54px; font-size: 1.6rem;">
+                            <i class="bi bi-stethoscope"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Dr. {{ current_user.name }}</h5>
+                            <span class="text-muted small">{{ current_user.email }}</span>
+                        </div>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
-                </div>
+                    <form method="POST">
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                    <input type="text" class="form-control" value="{{ current_user.name }}" disabled>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.75rem;">Contact hospital admin to modify legal name.</small>
+                            </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Specialization</label>
-                    <input type="text" name="specialization" class="form-control"
-                           value="{{ doctor.specialization or '' }}" placeholder="e.g. Cardiologist">
-                </div>
+                            <div class="col-sm-6">
+                                <label class="form-label">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                                    <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Qualification</label>
-                    <input type="text" name="qualification" class="form-control"
-                           value="{{ doctor.qualification or '' }}" placeholder="e.g. MBBS, MD">
-                </div>
+                        <div class="mb-3">
+                            <label class="form-label">Clinical Specialization</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-heart-pulse text-muted"></i></span>
+                                <input type="text" name="specialization" class="form-control"
+                                       value="{{ doctor.specialization or '' }}" placeholder="e.g. Cardiologist, Neurologist, General Medicine">
+                            </div>
+                            <small class="text-muted" style="font-size: 0.78rem;">This will be displayed to patients when searching for physicians.</small>
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Availability</label>
-                    <input type="text" name="availability" class="form-control"
-                           value="{{ doctor.availability or '' }}" placeholder="e.g. Mon-Fri, 9AM-5PM">
-                </div>
+                        <div class="mb-3">
+                            <label class="form-label">Medical Qualifications</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-mortarboard text-muted"></i></span>
+                                <input type="text" name="qualification" class="form-control"
+                                       value="{{ doctor.qualification or '' }}" placeholder="e.g. MBBS, MD (Medicine), MRCP">
+                            </div>
+                        </div>
 
-                <button type="submit" class="btn btn-primary w-100">Save Profile</button>
-            </form>
+                        <div class="mb-4">
+                            <label class="form-label">Consultation Availability Hours</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-clock text-muted"></i></span>
+                                <input type="text" name="availability" class="form-control"
+                                       value="{{ doctor.availability or '' }}" placeholder="e.g. Mon-Fri, 9:00 AM - 4:00 PM">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="bi bi-check-lg"></i> Save Profile Details
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

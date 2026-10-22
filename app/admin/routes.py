@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
 from datetime import datetime
+
 from app.extensions import db
 from app.models import User, Doctor, Patient, Appointment, MedicalRecord, RadiologyAppointment, Machine, Radiologist
 from app.utils import role_required, generate_csv, create_notification
@@ -99,6 +100,10 @@ def export_patients_csv():
         mimetype='text/csv'
     )
 
+
+# ==========================================
+# RADIOLOGY REQUESTS
+# ==========================================
 @admin_bp.route('/radiology-requests')
 @login_required
 @role_required('admin')
@@ -120,7 +125,6 @@ def radiology_requests():
 def radiology_request_detail(appointment_id):
     appointment = RadiologyAppointment.query.get_or_404(appointment_id)
 
-    # Machines matching this test type, for the assignment dropdown
     matching_machines = Machine.query.filter_by(test_type=appointment.test.name, is_available=True).all()
     radiologists = Radiologist.query.all()
 
@@ -201,6 +205,10 @@ def request_new_prescription(appointment_id):
     flash('Patient has been asked to re-upload their prescription.', 'info')
     return redirect(url_for('admin.radiology_requests'))
 
+
+# ==========================================
+# RADIOLOGISTS
+# ==========================================
 @admin_bp.route('/radiologists', methods=['GET', 'POST'])
 @login_required
 @role_required('admin')
@@ -230,3 +238,13 @@ def manage_radiologists():
 
     radiologists = Radiologist.query.all()
     return render_template('admin/manage_radiologists.html', radiologists=radiologists)
+
+
+# ==========================================
+# ANALYTICS
+# ==========================================
+@admin_bp.route('/analytics')
+@login_required
+@role_required('admin')
+def analytics():
+    return render_template('admin/analytics.html')

@@ -1,57 +1,182 @@
 {% extends 'base.html' %}
-{% block title %}Doctor Dashboard{% endblock %}
+{% block title %}Doctor Dashboard — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Welcome, Dr. {{ current_user.name }}</h2>
-    {% if avg_rating %}
-<p class="text-muted">⭐ {{ avg_rating }} / 5 ({{ total_reviews }} review{{ 's' if total_reviews != 1 else '' }})</p>
-{% endif %}
-
-    <div class="row g-4 mb-4">
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                    <h3>{{ total_appointments }}</h3>
-                    <p class="mb-0">Total Appointments</p>
-                </div>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success">Doctor Practice Portal</span>
+                {% if avg_rating %}
+                <span class="badge bg-warning-soft text-warning fw-bold">
+                    <i class="bi bi-star-fill text-warning me-1"></i>{{ avg_rating }} / 5 ({{ total_reviews }} review{{ 's' if total_reviews != 1 else '' }})
+                </span>
+                {% endif %}
             </div>
+            <h2 class="fw-bold mb-0 mt-1">Welcome, Dr. {{ current_user.name }}</h2>
+            <p class="text-muted small mb-0">{{ doctor.specialization or 'General Practitioner' }} &bull; {{ doctor.qualification or 'MBBS' }}</p>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-warning">
-                <div class="card-body text-center">
-                    <h3>{{ pending_count }}</h3>
-                    <p class="mb-0">Pending</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                    <h3>{{ approved_count }}</h3>
-                    <p class="mb-0">Approved</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-info">
-                <div class="card-body text-center">
-                    <h3>{{ completed_count }}</h3>
-                    <p class="mb-0">Completed</p>
-                </div>
-            </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('doctor.appointments') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-calendar-check"></i> View Appointments
+            </a>
+            <a href="{{ url_for('doctor.profile') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil-square"></i> Edit Profile
+            </a>
         </div>
     </div>
 
+    <!-- Incomplete Profile Notice -->
     {% if not doctor.specialization %}
-    <div class="alert alert-warning">
-        ⚠️ Your profile is incomplete. <a href="{{ url_for('doctor.profile') }}">Complete it now</a> so patients can find you.
+    <div class="alert alert-warning d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4" role="alert">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+            <div>
+                <strong>Complete Your Practice Profile</strong>
+                <div class="small">Add your clinical specialization and availability so patients can book appointments with you.</div>
+            </div>
+        </div>
+        <a href="{{ url_for('doctor.profile') }}" class="btn btn-warning btn-sm fw-semibold">
+            Complete Profile Now
+        </a>
     </div>
     {% endif %}
 
-    <div class="mt-4">
-        <a href="{{ url_for('doctor.appointments') }}" class="btn btn-primary me-2">View Appointments</a>
-        <a href="{{ url_for('doctor.profile') }}" class="btn btn-secondary">Edit Profile</a>
+    <!-- 4 Modern Stat Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ total_appointments }}</div>
+                    <div class="stat-label">Total Appointments</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ pending_count }}</div>
+                    <div class="stat-label">Pending Approval</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="bi bi-calendar-check-fill"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ approved_count }}</div>
+                    <div class="stat-label">Approved & Upcoming</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon info">
+                    <i class="bi bi-check-all"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ completed_count }}</div>
+                    <div class="stat-label">Completed Consults</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access Hub -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Physician Quick Actions</span>
+                    <span class="text-muted small">Daily Practice Tools</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <a href="{{ url_for('doctor.appointments') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                                <div class="stat-icon primary p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                                    <i class="bi bi-calendar3"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">Schedule & Appointments</div>
+                                    <small class="text-muted">Approve, reject or complete visits</small>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <a href="{{ url_for('doctor.profile') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                                <div class="stat-icon success p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                                    <i class="bi bi-person-gear"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">Practice Profile</div>
+                                    <small class="text-muted">Specialty, hours & qualifications</small>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <a href="{{ url_for('doctor.download_appointments_pdf') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                                <div class="stat-icon info p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">Download PDF Report</div>
+                                    <small class="text-muted">Printable clinical roster</small>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <a href="{{ url_for('doctor.export_appointments_csv') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                                <div class="stat-icon warning p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                                    <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">Export CSV Data</div>
+                                    <small class="text-muted">Spreadsheet of all consultations</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-surface-subtle">
+                    <span class="fw-semibold"><i class="bi bi-info-circle-fill text-primary me-2"></i>Practice Summary</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 pb-3 border-bottom">
+                        <small class="text-muted d-block">Specialization</small>
+                        <span class="fw-semibold fs-6">{{ doctor.specialization or 'Not specified' }}</span>
+                    </div>
+                    <div class="mb-3 pb-3 border-bottom">
+                        <small class="text-muted d-block">Qualifications</small>
+                        <span class="fw-semibold">{{ doctor.qualification or 'Not specified' }}</span>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Availability</small>
+                        <span class="badge bg-success-soft"><i class="bi bi-clock me-1"></i>{{ doctor.availability or 'Contact administration' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

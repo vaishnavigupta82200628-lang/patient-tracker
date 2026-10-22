@@ -1,23 +1,67 @@
 {% extends 'base.html' %}
-{% block title %}Notifications{% endblock %}
+{% block title %}Notifications — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Notifications</h2>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-bell-fill text-primary me-2"></i>Notifications</h2>
+            <p class="text-muted small mb-0">System alerts, appointment updates, and clinical schedule announcements.</p>
+        </div>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
 
     {% if notifications %}
-    <div class="list-group">
-        {% for notif in notifications %}
-        <div class="list-group-item {% if not notif.is_read %}list-group-item-light border-start border-primary border-3{% endif %}">
-            <div class="d-flex justify-content-between">
-                <p class="mb-1">{{ notif.message }}</p>
-                <small class="text-muted">{{ notif.created_at.strftime('%d %b, %I:%M %p') }}</small>
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="d-flex flex-column gap-3">
+                {% for notif in notifications %}
+                <div class="card border-0 shadow-sm transition-fast p-3" 
+                     style="border-left: 4px solid {{ 'var(--primary)' if not notif.is_read else 'var(--border-color)' }} !important; 
+                            background-color: {{ 'var(--primary-subtle)' if not notif.is_read else 'var(--bg-surface)' }};">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="rounded-circle p-2 {{ 'bg-primary text-white' if not notif.is_read else 'bg-surface-subtle text-muted' }}" 
+                             style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="bi {{ 'bi-bell-fill' if not notif.is_read else 'bi-bell' }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+                                {% if not notif.is_read %}
+                                    <span class="badge bg-primary" style="font-size: 0.7rem;">New Alert</span>
+                                {% else %}
+                                    <span class="badge bg-secondary" style="font-size: 0.7rem;">Read</span>
+                                {% endif %}
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>{{ notif.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                                </small>
+                            </div>
+                            <p class="mb-0 fw-medium" style="color: var(--text-primary); font-size: 0.95rem;">
+                                {{ notif.message }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
-        {% endfor %}
     </div>
     {% else %}
-    <p class="text-muted">No notifications yet.</p>
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-bell-slash"></i>
+                </div>
+                <h4 class="empty-state-title">No Notifications Yet</h4>
+                <p class="empty-state-desc">You are completely caught up! We will notify you whenever there are new updates regarding appointments or tests.</p>
+                <a href="{{ url_for('main.home') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-house"></i> Return Home
+                </a>
+            </div>
+        </div>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

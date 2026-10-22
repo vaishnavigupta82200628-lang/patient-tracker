@@ -1,64 +1,69 @@
 {% extends 'base.html' %}
-{% block title %}Rate Doctor{% endblock %}
+{% block title %}Rate Doctor — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Rate Your Doctor</h2>
-        <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning">Feedback & Review</span>
+                <span class="text-muted small">&bull; Patient Experience</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-star-fill text-warning me-2"></i>Rate Your Consultation</h2>
+        </div>
+        <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> My Appointments
+        </a>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <p class="mb-1"><strong>Doctor:</strong> Dr. {{ appointment.doctor.user.name }}</p>
-                    <p class="mb-0"><strong>Visit Date:</strong> {{ appointment.date_time.strftime('%d %b %Y') }}</p>
+        <div class="col-lg-6 col-md-8">
+            <!-- Doctor Details Card -->
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-body p-4 d-flex align-items-center gap-3">
+                    <div class="stat-icon primary p-0" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Dr. {{ appointment.doctor.user.name }}</h5>
+                        <p class="text-muted small mb-0">
+                            <i class="bi bi-calendar3 me-1"></i>Visit Date: {{ appointment.date_time.strftime('%d %b %Y, %I:%M %p') }}
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <form method="POST">
-                <div class="mb-4">
-                    <label class="form-label d-block">How was your experience?</label>
-                    <div class="star-rating">
-                        {% for i in range(5, 0, -1) %}
-                        <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" required>
-                        <label for="star{{ i }}">★</label>
-                        {% endfor %}
-                    </div>
-                </div>
+            <!-- Review Card Form -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST">
+                        <div class="mb-4 text-center">
+                            <label class="form-label fw-semibold fs-6 mb-2 d-block">How would you rate your consultation experience?</label>
+                            <p class="text-muted small mb-3">Click on the stars to choose your rating (1 to 5 stars).</p>
+                            
+                            <div class="star-rating justify-content-center my-2">
+                                {% for i in range(5, 0, -1) %}
+                                <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" required>
+                                <label for="star{{ i }}" title="{{ i }} Stars">★</label>
+                                {% endfor %}
+                            </div>
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Comments (optional)</label>
-                    <textarea name="comment" class="form-control" rows="3" placeholder="Share your experience..."></textarea>
-                </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Patient Comments & Clinical Feedback</label>
+                            <textarea name="comment" class="form-control" rows="4" 
+                                      placeholder="Share what went well during your consultation (e.g. physician was attentive, explained medication clearly, minimal wait time)..."></textarea>
+                            <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">Your reviews help other patients make informed healthcare decisions.</small>
+                        </div>
 
-                <button type="submit" class="btn btn-primary w-100">Submit Review</button>
-            </form>
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="bi bi-check2-circle fs-5 me-1"></i> Submit Physician Review
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<style>
-    .star-rating {
-        display: flex;
-        flex-direction: row-reverse;
-        justify-content: flex-end;
-        gap: 4px;
-    }
-    .star-rating input {
-        display: none;
-    }
-    .star-rating label {
-        font-size: 2.2rem;
-        color: #d1d5db;
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-    .star-rating input:checked ~ label,
-    .star-rating label:hover,
-    .star-rating label:hover ~ label {
-        color: #f59e0b;
-    }
-</style>
 {% endblock %}

@@ -1,93 +1,425 @@
 {% extends 'base.html' %}
-{% block title %}Home - Patient Tracker{% endblock %}
+{% block title %}Patient Tracker — AI Powered Hospital Management System{% endblock %}
 
 {% block content %}
 
 <!-- HERO SECTION -->
-<section class="hero-section text-center">
+<section class="hero-medical">
     <div class="container">
-        <h1>AI-Powered Hospital Management System</h1>
-        <p class="lead">Smarter patient care through intelligent symptom analysis, seamless appointment booking, and real-time medical record management.</p>
-        {% if not current_user.is_authenticated %}
-            <div class="mt-4">
-                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg me-3">Get Started</a>
-                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">Login</a>
-            </div>
-        {% else %}
-            <div class="mt-4">
-                <a href="{{ url_for('main.home') }}" class="btn btn-light btn-lg">Go to Dashboard</a>
-            </div>
-        {% endif %}
-    </div>
-</section>
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="hero-medical-badge">
+                    <i class="bi bi-shield-check"></i> Next-Gen Intelligent Healthcare
+                </div>
+                <h1 class="hero-headline">
+                    Intelligent Care, <br>
+                    <span class="text-gradient-medical">Connected Hospital</span> Management.
+                </h1>
+                <p class="hero-subtext">
+                    Empowering patients, physicians, and radiologists with AI-driven symptom analysis, automated diagnostic bookings, and verified electronic health records.
+                </p>
 
-<!-- FEATURES SECTION -->
-<section class="section">
-    <div class="container">
-        <h2 class="text-center mb-5">Why Choose Patient Tracker?</h2>
-        <div class="row g-4">
-            <div class="col-md-3 col-sm-6">
-                <div class="feature-card bg-light">
-                    <div class="feature-icon">🤖</div>
-                    <h5>AI Symptom Analyzer</h5>
-                    <p class="text-muted">Describe your symptoms in plain language and get intelligent, data-driven insights.</p>
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus-fill"></i> Get Started Free
+                        </a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Login Portal
+                        </a>
+                    {% else %}
+                        {% if current_user.role == 'patient' %}
+                            <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-speedometer2"></i> Go to Patient Dashboard
+                            </a>
+                            <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-outline-primary btn-lg">
+                                <i class="bi bi-calendar-plus"></i> Book Doctor
+                            </a>
+                        {% elif current_user.role == 'doctor' %}
+                            <a href="{{ url_for('doctor.dashboard') }}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-speedometer2"></i> Doctor Dashboard
+                            </a>
+                        {% elif current_user.role == 'radiologist' %}
+                            <a href="{{ url_for('radiologist.dashboard') }}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-speedometer2"></i> Radiologist Dashboard
+                            </a>
+                        {% elif current_user.role == 'admin' %}
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-speedometer2"></i> Admin Panel
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="d-flex align-items-center gap-4 text-muted small pt-2">
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-check-circle-fill text-success"></i> 24/7 Availability
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-check-circle-fill text-success"></i> Instant OCR Verification
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-check-circle-fill text-success"></i> 100% Paperless
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="feature-card bg-light">
-                    <div class="feature-icon">📅</div>
-                    <h5>Easy Appointments</h5>
-                    <p class="text-muted">Book, reschedule, and manage appointments with your doctor in just a few clicks.</p>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="feature-card bg-light">
-                    <div class="feature-icon">📋</div>
-                    <h5>Digital Medical Records</h5>
-                    <p class="text-muted">Access your complete medical history anytime, securely stored and organized.</p>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="feature-card bg-light">
-                    <div class="feature-icon">📊</div>
-                    <h5>Smart Analytics</h5>
-                    <p class="text-muted">Doctors and admins get real-time insights through interactive dashboards.</p>
+
+            <div class="col-lg-6">
+                <div class="hero-illustration-wrapper">
+                    <!-- Floating mini-card 1 -->
+                    <div class="hero-floating-card card-1 d-none d-md-flex">
+                        <div class="stat-icon success" style="width: 42px; height: 42px; font-size: 1.2rem;">
+                            <i class="bi bi-heart-pulse-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Vital Health Sync</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">AI Diagnostics Active</div>
+                        </div>
+                    </div>
+
+                    <!-- Floating mini-card 2 -->
+                    <div class="hero-floating-card card-2 d-none d-md-flex">
+                        <div class="stat-icon primary" style="width: 42px; height: 42px; font-size: 1.2rem;">
+                            <i class="bi bi-file-earmark-check-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small">Prescription Verified</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Instant OCR Match</div>
+                        </div>
+                    </div>
+
+                    <!-- Modern Hospital & Doctor SVG Graphic -->
+                    <svg viewBox="0 0 540 420" width="100%" height="auto" class="rounded-4 shadow-sm" style="background: linear-gradient(135deg, rgba(11,94,215,0.08) 0%, rgba(2,132,199,0.12) 100%); border: 1px solid var(--border-color);">
+                        <defs>
+                            <linearGradient id="medGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#0B5ED7"/>
+                                <stop offset="100%" stop-color="#1E88E5"/>
+                            </linearGradient>
+                            <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#2E9E6B"/>
+                                <stop offset="100%" stop-color="#10B981"/>
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Background Grid Lines -->
+                        <path d="M 40,80 L 500,80 M 40,160 L 500,160 M 40,240 L 500,240 M 40,320 L 500,320" stroke="rgba(11,94,215,0.08)" stroke-width="1.5" stroke-dasharray="4,4"/>
+                        <path d="M 120,40 L 120,380 M 240,40 L 240,380 M 360,40 L 360,380 M 460,40 L 460,380" stroke="rgba(11,94,215,0.08)" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+                        <!-- Center Medical Cross Badge -->
+                        <circle cx="270" cy="190" r="110" fill="rgba(11,94,215,0.06)"/>
+                        <circle cx="270" cy="190" r="85" fill="rgba(11,94,215,0.12)"/>
+                        
+                        <!-- Stethoscope / Cross Motif -->
+                        <rect x="252" y="145" width="36" height="90" rx="10" fill="url(#medGrad)"/>
+                        <rect x="225" y="172" width="90" height="36" rx="10" fill="url(#medGrad)"/>
+
+                        <!-- Pulse Wave line -->
+                        <path d="M 70,290 L 170,290 L 195,250 L 215,325 L 235,275 L 250,295 L 310,295 L 325,265 L 340,315 L 355,290 L 470,290" 
+                              fill="none" stroke="#2E9E6B" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+                        <!-- Doctor Consultation Illustration Card Graphic -->
+                        <rect x="75" y="75" width="140" height="95" rx="14" fill="#FFFFFF" filter="drop-shadow(0 8px 16px rgba(11,94,215,0.12))"/>
+                        <circle cx="105" cy="110" r="16" fill="#0B5ED7" opacity="0.9"/>
+                        <path d="M 100,105 L 105,115 L 115,103" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+                        <rect x="130" y="100" width="70" height="8" rx="4" fill="#0B5ED7" opacity="0.3"/>
+                        <rect x="130" y="115" width="50" height="6" rx="3" fill="#94A3B8"/>
+                        <rect x="95" y="140" width="100" height="15" rx="5" fill="#EBF3FE"/>
+
+                        <!-- Diagnostic Scanner Graphic -->
+                        <rect x="330" y="85" width="145" height="100" rx="14" fill="#FFFFFF" filter="drop-shadow(0 8px 16px rgba(11,94,215,0.12))"/>
+                        <circle cx="360" cy="120" r="16" fill="#2E9E6B" opacity="0.9"/>
+                        <path d="M 353,120 L 367,120 M 360,113 L 360,127" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+                        <rect x="385" y="110" width="75" height="8" rx="4" fill="#2E9E6B" opacity="0.3"/>
+                        <rect x="385" y="125" width="55" height="6" rx="3" fill="#94A3B8"/>
+                        <rect x="350" y="150" width="105" height="18" rx="5" fill="#E8F7F0"/>
+                    </svg>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- HOW IT WORKS SECTION -->
-<section class="section bg-light">
+<!-- ANIMATED STATISTICS STRIP -->
+<section class="stats-strip-section">
     <div class="container">
-        <h2 class="text-center mb-5">How It Works</h2>
         <div class="row g-4 text-center">
-            <div class="col-md-4">
-                <div class="step-circle">1</div>
-                <h5>Create Your Account</h5>
-                <p class="text-muted">Register as a Patient or Doctor in under a minute.</p>
+            <div class="col-md-3 col-6">
+                <div class="stat-counter-box">
+                    <div class="text-primary mb-2 fs-2"><i class="bi bi-person-badge-fill"></i></div>
+                    <div class="stat-counter-number" data-counter-target="250" data-counter-suffix="+">250+</div>
+                    <div class="stat-counter-label">Specialist Doctors</div>
+                </div>
             </div>
-            <div class="col-md-4">
-                <div class="step-circle">2</div>
-                <h5>Book or Manage Appointments</h5>
-                <p class="text-muted">Patients book appointments; doctors approve and manage their schedule.</p>
+            <div class="col-md-3 col-6">
+                <div class="stat-counter-box">
+                    <div class="text-success mb-2 fs-2"><i class="bi bi-people-fill"></i></div>
+                    <div class="stat-counter-number" data-counter-target="15000" data-counter-suffix="+">15,000+</div>
+                    <div class="stat-counter-label">Registered Patients</div>
+                </div>
             </div>
-            <div class="col-md-4">
-                <div class="step-circle">3</div>
-                <h5>Get AI-Powered Insights</h5>
-                <p class="text-muted">Use the symptom analyzer and receive data-backed health insights instantly.</p>
+            <div class="col-md-3 col-6">
+                <div class="stat-counter-box">
+                    <div class="text-info mb-2 fs-2"><i class="bi bi-camera-fill"></i></div>
+                    <div class="stat-counter-number" data-counter-target="45" data-counter-suffix="+">45+</div>
+                    <div class="stat-counter-label">Diagnostic Modalities</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-counter-box">
+                    <div class="text-warning mb-2 fs-2"><i class="bi bi-file-earmark-check-fill"></i></div>
+                    <div class="stat-counter-number" data-counter-target="99" data-counter-suffix="%">99%</div>
+                    <div class="stat-counter-label">On-Time Diagnostic Reports</div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- CTA SECTION -->
+<!-- FEATURES GRID SECTION -->
+<section class="py-5">
+    <div class="container py-4">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-primary mb-2">Hospital Capabilities</span>
+            <h2 class="display-6 fw-bold">Everything Needed for Modern Healthcare</h2>
+            <p class="text-muted">From AI-powered symptom analysis to multi-branch radiology slot allocation, our system automates hospital workflows.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature 1: AI Symptom Checker -->
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-box">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <h4>AI Symptom Checker</h4>
+                    <p>Natural language symptom extraction powered by clinical models. Identifies potential conditions and provides instant guidance before consultation.</p>
+                </div>
+            </div>
+
+            <!-- Feature 2: Doctor Appointments -->
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-box">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                    <h4>Doctor Appointments</h4>
+                    <p>Search physicians by specialty, view ratings, select preferred date-time slots, and receive automated confirmations and notifications.</p>
+                </div>
+            </div>
+
+            <!-- Feature 3: Digital Medical Records -->
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-box">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-file-earmark-medical-fill"></i>
+                    </div>
+                    <h4>Digital Health Records</h4>
+                    <p>Centralized repository for prescriptions, clinical diagnoses, and visit summaries with one-click tamper-proof PDF export.</p>
+                </div>
+            </div>
+
+            <!-- Feature 4: Radiology & Diagnostics -->
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-box">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-camera-fill"></i>
+                    </div>
+                    <h4>Radiology & Diagnostics</h4>
+                    <p>End-to-end booking for MRI, CT Scans, Ultrasound, and X-Rays with prescription OCR verification, QR check-in, and slot assignments.</p>
+                </div>
+            </div>
+
+            <!-- Feature 5: Real-Time Analytics -->
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-box">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h4>Clinical & Revenue Analytics</h4>
+                    <p>Interactive Chart.js visualizations covering appointment volumes, top predicted health trends, physician ratings, and revenue streams.</p>
+                </div>
+            </div>
+
+            <!-- Feature 6: Smart Notifications -->
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-box">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-bell-fill"></i>
+                    </div>
+                    <h4>Real-Time Alerts</h4>
+                    <p>Keeps patients, doctors, and hospital administrators instantly synchronized on slot approvals, test results, and schedule updates.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS 4-STEP SECTION -->
+<section class="py-5" style="background-color: var(--bg-surface-subtle); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+    <div class="container py-4">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-success mb-2">Workflow</span>
+            <h2 class="display-6 fw-bold">How Patient Tracker Works</h2>
+            <p class="text-muted">A streamlined, 4-step digital pipeline connecting patients to medical specialists and diagnostic labs.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number-bubble">1</div>
+                    <h5 class="fw-bold mb-2">Create Account</h5>
+                    <p class="text-muted small">Sign up as a patient or medical practitioner with full role-based access control.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number-bubble">2</div>
+                    <h5 class="fw-bold mb-2">AI Check & Booking</h5>
+                    <p class="text-muted small">Describe symptoms for AI analysis or schedule an appointment with your chosen specialist.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number-bubble">3</div>
+                    <h5 class="fw-bold mb-2">Diagnostic Scan</h5>
+                    <p class="text-muted small">Upload prescription, complete cashless payment, and receive confirmed machine slots & QR token.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number-bubble">4</div>
+                    <h5 class="fw-bold mb-2">Digital Reports</h5>
+                    <p class="text-muted small">Radiologists upload findings, physicians document records, and patients download verified reports.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ROLE CARDS SECTION -->
+<section class="py-5">
+    <div class="container py-4">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-primary mb-2">Platform Roles</span>
+            <h2 class="display-6 fw-bold">Tailored Experience for Every User</h2>
+            <p class="text-muted">Dedicated dashboards and toolsets designed for each healthcare stakeholder.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Patient -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-card-header">
+                        <div class="role-icon patient">
+                            <i class="bi bi-person-heart"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Patient</h5>
+                            <span class="badge bg-primary">Care Seeker</span>
+                        </div>
+                    </div>
+                    <ul class="role-features-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Instant doctor appointments</li>
+                        <li><i class="bi bi-check-circle-fill"></i> AI symptom assessment</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Radiology test bookings</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Electronic records & PDF</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Physician rating & reviews</li>
+                    </ul>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-sm w-100 mt-auto">Register as Patient</a>
+                </div>
+            </div>
+
+            <!-- Doctor -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-card-header">
+                        <div class="role-icon doctor">
+                            <i class="bi bi-stethoscope"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Doctor</h5>
+                            <span class="badge bg-success">Clinician</span>
+                        </div>
+                    </div>
+                    <ul class="role-features-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Appointment management</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Patient medical history</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Digital prescription issue</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Patient rating analytics</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Schedule PDF & CSV exports</li>
+                    </ul>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-success btn-sm w-100 mt-auto">Doctor Login</a>
+                </div>
+            </div>
+
+            <!-- Radiologist -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-card-header">
+                        <div class="role-icon radiologist">
+                            <i class="bi bi-camera"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Radiologist</h5>
+                            <span class="badge bg-info">Diagnostic Lab</span>
+                        </div>
+                    </div>
+                    <ul class="role-features-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Scheduled scan queue</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Machine & room allocations</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Clinical findings entry</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Immediate report publishing</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Performance tracking</li>
+                    </ul>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-info btn-sm w-100 mt-auto">Radiologist Portal</a>
+                </div>
+            </div>
+
+            <!-- Admin -->
+            <div class="col-lg-3 col-md-6">
+                <div class="role-card">
+                    <div class="role-card-header">
+                        <div class="role-icon admin">
+                            <i class="bi bi-shield-shaded"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0">Hospital Admin</h5>
+                            <span class="badge bg-warning">Management</span>
+                        </div>
+                    </div>
+                    <ul class="role-features-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Doctor & patient directory</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Radiology slot assignment</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Machine availability controls</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Revenue & disease trends</li>
+                        <li><i class="bi bi-check-circle-fill"></i> System-wide audit reports</li>
+                    </ul>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-warning btn-sm w-100 mt-auto">Admin Access</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FINAL CALL TO ACTION SECTION -->
 {% if not current_user.is_authenticated %}
-<section class="section text-center">
-    <div class="container">
-        <h3>Ready to experience smarter healthcare management?</h3>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg mt-3">Create Your Free Account</a>
+<section class="py-5" style="background: var(--primary-gradient); color: white;">
+    <div class="container text-center py-4">
+        <h2 class="display-6 fw-bold text-white mb-3">Ready to Experience Smarter Healthcare?</h2>
+        <p class="lead text-white-50 mx-auto mb-4" style="max-width: 620px;">
+            Join thousands of patients and leading medical specialists who manage consultations, diagnostics, and digital health records with Patient Tracker.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-4 fw-semibold text-primary">
+                <i class="bi bi-person-plus-fill"></i> Create Free Account
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In
+            </a>
+        </div>
     </div>
 </section>
 {% endif %}

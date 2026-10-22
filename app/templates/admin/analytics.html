@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% block title %}Hospital Analytics & Clinical Intelligence — Patient Tracker{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Hospital Intelligence</span>
+                <span class="text-muted small">&bull; Real-time Metrics</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Analytics & Reporting</h2>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Revenue & Transactions Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value text-success" id="totalRevenue">₹0</div>
+                    <div class="stat-label">Total Diagnostic Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <div class="stat-card">
+                <div class="stat-icon info">
+                    <i class="bi bi-credit-card-2-front-fill"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value text-info" id="totalTransactions">0</div>
+                    <div class="stat-label">Paid Transactions Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 col-lg-4">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="bi bi-activity"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value text-primary">Live</div>
+                    <div class="stat-label">Telemetrics & OCR Analytics</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-cash-stack text-success me-2"></i>Revenue by Month (₹)</span>
+                    <span class="badge bg-success-soft">Financials</span>
+                </div>
+                <div class="card-body">
+                    <div style="min-height: 260px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-virus text-danger me-2"></i>Top Predicted Health Conditions</span>
+                    <span class="badge bg-primary-soft">AI Logs</span>
+                </div>
+                <div class="card-body">
+                    <div style="min-height: 260px;">
+                        <canvas id="diseaseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Rated Doctors Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-star-fill text-warning me-2"></i>Top Rated Hospital Physicians</span>
+            <span class="badge bg-secondary">Patient Reviews</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="topDoctorsTable">
+                    <thead>
+                        <tr>
+                            <th>Physician</th>
+                            <th>Specialization</th>
+                            <th>Patient Rating</th>
+                            <th>Total Reviews</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topDoctorsBody">
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                Loading physician analytics...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Keep All Existing Analytics Scripts & Element IDs -->
+<script>
+    async function loadAnalytics() {
+        // ---- Revenue Chart ----
+        try {
+            const revResponse = await fetch('/api/v1/analytics/revenue');
+            const revData = await revResponse.json();
+
+            document.getElementById('totalRevenue').textContent = `₹${(revData.total_revenue || 0).toLocaleString('en-IN')}`;
+            document.getElementById('totalTransactions').textContent = revData.total_transactions || 0;
+
+            new Chart(document.getElementById('revenueChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: revData.labels,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: revData.values,
+                        borderColor: '#2E9E6B',
+                        backgroundColor: 'rgba(46, 158, 107, 0.12)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#2E9E6B',
+                        pointBorderColor: '#FFFFFF',
+                        pointRadius: 5
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { display: false } 
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Revenue chart error:', error);
+        }
+
+        // ---- Disease Trends Chart ----
+        try {
+            const diseaseResponse = await fetch('/api/v1/analytics/disease-trends');
+            const diseaseData = await diseaseResponse.json();
+
+            new Chart(document.getElementById('diseaseChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: diseaseData.labels,
+                    datasets: [{
+                        label: 'Predictions',
+                        data: diseaseData.values,
+                        backgroundColor: '#0B5ED7',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { stepSize: 1 } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Disease chart error:', error);
+        }
+
+        // ---- Top Doctors Table ----
+        try {
+            const doctorsResponse = await fetch('/api/v1/analytics/top-doctors');
+            const doctorsData = await doctorsResponse.json();
+
+            const tbody = document.getElementById('topDoctorsBody');
+            if (!doctorsData.doctors || doctorsData.doctors.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">
+                            <i class="bi bi-emoji-neutral me-1"></i> No rated doctors recorded yet.
+                        </td>
+                    </tr>`;
+            } else {
+                tbody.innerHTML = doctorsData.doctors.map(doc => `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="stat-icon primary p-0" style="width: 34px; height: 34px; font-size: 1rem;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <span class="fw-semibold">Dr. ${doc.name}</span>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-primary-soft">${doc.specialization}</span></td>
+                        <td>
+                            <span class="badge bg-warning-soft text-warning fw-bold">
+                                <i class="bi bi-star-fill text-warning me-1"></i>${doc.avg_rating} / 5
+                            </span>
+                        </td>
+                        <td><span class="text-muted">${doc.review_count} review${doc.review_count !== 1 ? 's' : ''}</span></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Top doctors error:', error);
+            const tbody = document.getElementById('topDoctorsBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-danger text-center py-3">Error loading doctor ratings.</td></tr>';
+            }
+        }
+    }
+
+    loadAnalytics();
+</script>
+{% endblock %}

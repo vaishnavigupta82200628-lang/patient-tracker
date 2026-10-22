@@ -1,65 +1,184 @@
 {% extends 'base.html' %}
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Control Center — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Admin Dashboard</h2>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning">Administrator Portal</span>
+                <span class="text-muted small">&bull; System Overview</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1">Hospital Control Center</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('admin.analytics') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-graph-up-arrow"></i> View Analytics
+            </a>
+            <a href="{{ url_for('admin.radiology_requests') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-camera"></i> Radiology Requests
+            </a>
+        </div>
+    </div>
 
-    <div class="row g-4">
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                    <h3>{{ total_doctors }}</h3>
-                    <p class="mb-0">Total Doctors</p>
+    <!-- 4 Modern Stat Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="bi bi-person-badge-fill"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ total_doctors }}</div>
+                    <div class="stat-label">Active Doctors</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                    <h3>{{ total_patients }}</h3>
-                    <p class="mb-0">Total Patients</p>
+
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ total_patients }}</div>
+                    <div class="stat-label">Registered Patients</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-info">
-                <div class="card-body text-center">
-                    <h3>{{ total_appointments }}</h3>
-                    <p class="mb-0">Total Appointments</p>
+
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon info">
+                    <i class="bi bi-calendar3"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ total_appointments }}</div>
+                    <div class="stat-label">Total Appointments</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-warning">
-                <div class="card-body text-center">
-                    <h3>{{ pending_appointments }}</h3>
-                    <p class="mb-0">Pending Appointments</p>
+
+        <div class="col-xl-3 col-sm-6">
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ pending_appointments }}</div>
+                    <div class="stat-label">Pending Approval</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-4 mb-5">
-        <a href="{{ url_for('admin.manage_doctors') }}" class="btn btn-primary me-2">Manage Doctors</a>
-        <a href="{{ url_for('admin.manage_patients') }}" class="btn btn-secondary">Manage Patients</a>
-        <a href="{{ url_for('admin.radiology_requests') }}" class="btn btn-info me-2">📷 Radiology Requests</a>
-        <a href="{{ url_for('admin.manage_radiologists') }}" class="btn btn-secondary me-2">👨‍⚕️ Radiologists</a>
-    </div>
+    <!-- Quick Navigation Hub -->
+    <div class="card mb-4">
+        <div class="card-header bg-surface-subtle d-flex align-items-center justify-content-between">
+            <span class="fw-semibold"><i class="bi bi-grid-fill text-primary me-2"></i>Administration Hub</span>
+            <span class="text-muted small">Quick Actions & Resource Management</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4 col-sm-6">
+                    <a href="{{ url_for('admin.manage_doctors') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                        <div class="stat-icon primary p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Manage Doctors</div>
+                            <small class="text-muted">Staff directory & records</small>
+                        </div>
+                    </a>
+                </div>
 
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Appointments by Status</h5>
-                    <canvas id="appointmentsChart"></canvas>
+                <div class="col-md-4 col-sm-6">
+                    <a href="{{ url_for('admin.manage_patients') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                        <div class="stat-icon success p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Manage Patients</div>
+                            <small class="text-muted">Demographics & clinical profiles</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <a href="{{ url_for('admin.radiology_requests') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                        <div class="stat-icon info p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-camera"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Radiology Queue</div>
+                            <small class="text-muted">Prescriptions & slot approval</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <a href="{{ url_for('admin.manage_radiologists') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                        <div class="stat-icon warning p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-radioactive"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Radiology Staff</div>
+                            <small class="text-muted">Add & manage radiologists</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <a href="{{ url_for('admin.analytics') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                        <div class="stat-icon primary p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-pie-chart-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Hospital Analytics</div>
+                            <small class="text-muted">Revenue & epidemiological trends</small>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-4 col-sm-6">
+                    <a href="{{ url_for('admin.export_doctors_csv') }}" class="btn btn-outline-secondary w-100 p-3 text-start d-flex align-items-center gap-3">
+                        <div class="stat-icon success p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">Export CSV Data</div>
+                            <small class="text-muted">Doctors roster spreadsheet</small>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Doctors vs Patients</h5>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Appointments by Status</span>
+                    <span class="badge bg-secondary">Live API</span>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center align-items-center" style="min-height: 320px;">
+                    <div style="max-width: 320px; width: 100%;">
+                        <canvas id="appointmentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Doctors vs Patients Ratio</span>
+                    <span class="badge bg-secondary">Live API</span>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center" style="min-height: 320px;">
                     <canvas id="usersChart"></canvas>
                 </div>
             </div>
@@ -67,6 +186,7 @@
     </div>
 </div>
 
+<!-- Keep All Existing Dashboard Script Logic & Element IDs -->
 <script>
     async function loadDashboardCharts() {
         try {
@@ -76,7 +196,7 @@
             // ---- PIE CHART: Appointments by Status ----
             const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
             new Chart(appointmentsCtx, {
-                type: 'pie',
+                type: 'doughnut',
                 data: {
                     labels: ['Pending', 'Approved', 'Completed'],
                     datasets: [{
@@ -85,14 +205,17 @@
                             stats.approved_appointments,
                             stats.completed_appointments
                         ],
-                        backgroundColor: ['#ffc107', '#198754', '#0dcaf0']
+                        backgroundColor: ['#D97706', '#2E9E6B', '#0B5ED7'],
+                        borderWidth: 2,
+                        borderColor: '#FFFFFF'
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'bottom' }
-                    }
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } }
+                    },
+                    cutout: '65%'
                 }
             });
 
@@ -103,9 +226,10 @@
                 data: {
                     labels: ['Doctors', 'Patients'],
                     datasets: [{
-                        label: 'Total Count',
+                        label: 'Registered Total',
                         data: [stats.total_doctors, stats.total_patients],
-                        backgroundColor: ['#0d6efd', '#198754']
+                        backgroundColor: ['#0B5ED7', '#2E9E6B'],
+                        borderRadius: 8
                     }]
                 },
                 options: {
@@ -114,7 +238,14 @@
                         legend: { display: false }
                     },
                     scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
                     }
                 }
             });

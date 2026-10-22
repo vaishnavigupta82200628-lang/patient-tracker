@@ -1,27 +1,94 @@
 {% extends 'base.html' %}
-{% block title %}AI Symptom Checker{% endblock %}
+{% block title %}AI Symptom Checker — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>🤖 AI Symptom Checker</h2>
-        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Clinical Intelligence</span>
+                <span class="text-muted small">&bull; Automated Symptom Extraction</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-robot text-primary me-2"></i>AI Symptom Checker</h2>
+        </div>
+        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-md-7">
-            <div class="alert alert-info">
-                Describe how you're feeling in your own words. Our AI will identify possible symptoms from your description.
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4 p-md-5">
+                    <!-- AI Assistant Intro Banner -->
+                    <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4 bg-primary-subtle border border-primary-subtle">
+                        <div class="stat-icon primary" style="width: 52px; height: 52px; font-size: 1.6rem; flex-shrink: 0;">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1 text-primary">Natural Language Symptom Analysis</h5>
+                            <p class="text-secondary small mb-0">Describe how you feel in conversational language. Our clinical AI model detects reported symptoms and matches them against epidemiological datasets.</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Clickable Symptom Chips -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">Common Symptoms (Click to add to description):</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="symptom-tag-pill" data-symptom="fever">
+                                <i class="bi bi-thermometer-half text-danger"></i> Fever
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="headache">
+                                <i class="bi bi-lightning text-warning"></i> Headache
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="cough">
+                                <i class="bi bi-lungs text-primary"></i> Cough
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="fatigue">
+                                <i class="bi bi-battery text-secondary"></i> Fatigue
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="chest pain">
+                                <i class="bi bi-heart-pulse text-danger"></i> Chest Pain
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="nausea">
+                                <i class="bi bi-droplet-half text-info"></i> Nausea
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="shortness of breath">
+                                <i class="bi bi-wind text-primary"></i> Shortness of Breath
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="body ache">
+                                <i class="bi bi-person text-secondary"></i> Body Ache
+                            </span>
+                            <span class="symptom-tag-pill" data-symptom="sore throat">
+                                <i class="bi bi-soundwave text-warning"></i> Sore Throat
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Describe your symptoms in your own words *</label>
+                            <textarea name="symptoms_text" class="form-control" rows="5" required
+                                      placeholder="e.g. I have had a high fever and headache since yesterday morning, with severe fatigue and dry cough."></textarea>
+                            <small class="text-muted mt-1 d-block">Be as descriptive as possible regarding duration, intensity, and accompanying sensations.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-semibold fs-6">
+                            <i class="bi bi-cpu fs-5 me-1"></i> Analyze Symptoms with AI
+                        </button>
+                    </form>
+                </div>
             </div>
 
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Describe your symptoms</label>
-                    <textarea name="symptoms_text" class="form-control" rows="5" required
-                              placeholder="e.g. I have had a fever and headache since yesterday, along with body pain and fatigue."></textarea>
+            <!-- Medical Disclaimer Banner -->
+            <div class="alert alert-warning d-flex align-items-center gap-3 shadow-sm border-0">
+                <i class="bi bi-shield-exclamation fs-3 text-warning flex-shrink-0"></i>
+                <div class="small">
+                    <strong>Medical Disclaimer:</strong> The AI Symptom Checker is an educational decision-support tool and does not provide an official diagnosis. For emergency symptoms such as chest tightness or severe difficulty breathing, immediately seek emergency medical attention.
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Analyze Symptoms</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>

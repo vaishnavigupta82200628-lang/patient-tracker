@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}500 — Server Incident{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 text-center py-4">
+            <div class="empty-state border-0 shadow-sm p-5">
+                <div class="stat-icon warning mx-auto mb-4" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                </div>
+                <h1 class="display-4 fw-bold text-warning mb-2">500</h1>
+                <h3 class="fw-bold mb-3">Internal System Error</h3>
+                <p class="text-muted mb-4">
+                    Our medical server encountered an unexpected situation while processing your request. The technical monitoring team has been alerted.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('main.home') }}" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-house-door-fill me-1"></i> Return Home
+                    </a>
+                    <a href="javascript:location.reload()" class="btn btn-outline-secondary px-4 py-2">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Try Reloading
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

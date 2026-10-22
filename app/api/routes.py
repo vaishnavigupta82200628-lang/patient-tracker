@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
+from sqlalchemy import func
 
-from app.models import Appointment, MedicalRecord, SymptomLog, Doctor, Patient
+from app.extensions import db
+from app.models import Appointment, MedicalRecord, SymptomLog, Doctor, Patient, Payment, Review
 from app.utils import role_required
 
 api_bp = Blueprint('api', __name__, url_prefix='/api/v1')
@@ -38,12 +40,6 @@ def record_to_dict(record):
 @api_bp.route('/appointments', methods=['GET'])
 @login_required
 def get_appointments():
-    """
-    Returns appointments scoped to the logged-in user's role:
-    - Admin sees all appointments
-    - Doctor sees only their own
-    - Patient sees only their own
-    """
     if current_user.role == 'admin':
         appointments = Appointment.query.all()
 
@@ -76,7 +72,6 @@ def get_single_appointment(appointment_id):
     if not appointment:
         return jsonify({'error': 'Appointment not found'}), 404
 
-    # Authorization check: make sure this user is allowed to see this appointment
     if current_user.role == 'patient':
         patient = Patient.query.filter_by(user_id=current_user.id).first()
         if not patient or appointment.patient_id != patient.id:
@@ -86,8 +81,6 @@ def get_single_appointment(appointment_id):
         doctor = Doctor.query.filter_by(user_id=current_user.id).first()
         if not doctor or appointment.doctor_id != doctor.id:
             return jsonify({'error': 'Forbidden'}), 403
-
-    # Admins can view any appointment (no extra check needed)
 
     return jsonify(appointment_to_dict(appointment)), 200
 
@@ -135,3 +128,69 @@ def get_system_stats():
         'total_records': MedicalRecord.query.count(),
         'total_symptom_logs': SymptomLog.query.count()
     }), 200
+
+
+# ==========================================
+# ANALYTICS API
+# ==========================================
+@api_bp.route('/analytics/revenue', methods=['GET'])
+@login_required
+@role_required('admin')
+def get_revenue_analytics():
+    payments = Payment.query.filter_by(status='paid').all()
+
+    revenue_by_month = {}
+    for p in payments:
+        if p.paid_at:
+            month_key = p.paid_at.strftime('%Y-%m')
+            revenue_by_month[month_key] = revenue_by_month.get(month_key, 0) + p.amount
+
+    sorted_months = sorted(revenue_by_month.keys())
+
+    return jsonify({
+        'total_revenue': sum(revenue_by_month.values()),
+        'total_transactions': len(payments),
+        'labels': sorted_months,
+        'values': [revenue_by_month[m] for m in sorted_months]
+    }), 200
+
+
+@api_bp.route('/analytics/disease-trends', methods=['GET'])
+@login_required
+@role_required('admin')
+def get_disease_trends():
+    logs = SymptomLog.query.filter(SymptomLog.predicted_disease.isnot(None)).all()
+
+    disease_counts = {}
+    for log in logs:
+        disease_counts[log.predicted_disease] = disease_counts.get(log.predicted_disease, 0) + 1
+
+    sorted_diseases = sorted(disease_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+
+    return jsonify({
+        'labels': [d[0] for d in sorted_diseases],
+        'values': [d[1] for d in sorted_diseases]
+    }), 200
+
+
+@api_bp.route('/analytics/top-doctors', methods=['GET'])
+@login_required
+@role_required('admin')
+def get_top_doctors():
+    results = db.session.query(
+        Doctor.id,
+        func.avg(Review.rating).label('avg_rating'),
+        func.count(Review.id).label('review_count')
+    ).join(Review, Review.doctor_id == Doctor.id).group_by(Doctor.id).order_by(func.avg(Review.rating).desc()).limit(5).all()
+
+    doctors_data = []
+    for doctor_id, avg_rating, review_count in results:
+        doctor = Doctor.query.get(doctor_id)
+        doctors_data.append({
+            'name': doctor.user.name,
+            'specialization': doctor.specialization or 'General',
+            'avg_rating': round(avg_rating, 1),
+            'review_count': review_count
+        })
+
+    return jsonify({'doctors': doctors_data}), 200

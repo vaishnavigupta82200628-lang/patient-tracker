@@ -1,65 +1,132 @@
 {% extends 'base.html' %}
-{% block title %}Manage Radiologists{% endblock %}
+{% block title %}Manage Radiologists — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Manage Radiologists</h2>
-        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info">Diagnostic Staff</span>
+                <span class="text-muted small">&bull; Imaging Specialists</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-radioactive text-info me-2"></i>Manage Radiologists</h2>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-5">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Add New Radiologist</h5>
+    <div class="row g-4">
+        <!-- Add Radiologist Card Form -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-surface-subtle d-flex align-items-center gap-2">
+                    <i class="bi bi-person-plus-fill text-primary"></i>
+                    <span class="fw-semibold">Add New Radiologist</span>
+                </div>
+                <div class="card-body p-4">
                     <form method="POST">
                         <div class="mb-3">
-                            <label class="form-label">Full Name</label>
-                            <input type="text" name="name" class="form-control" required>
+                            <label class="form-label">Full Name *</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                                <input type="text" name="name" class="form-control" placeholder="e.g. Ramesh Sharma" required>
+                            </div>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" required>
+                            <label class="form-label">Email Address *</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                                <input type="email" name="email" class="form-control" placeholder="radiologist@hospital.com" required>
+                            </div>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" required minlength="6">
+                            <label class="form-label">Password *</label>
+                            <div class="input-group password-field-wrapper">
+                                <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                                <input type="password" name="password" class="form-control" placeholder="••••••••" required minlength="6">
+                            </div>
+                            <small class="text-muted" style="font-size: 0.78rem;">Minimum 6 characters</small>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Specialization</label>
-                            <input type="text" name="specialization" class="form-control" placeholder="e.g. MRI Specialist">
+
+                        <div class="mb-4">
+                            <label class="form-label">Specialization / Modality</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-camera text-muted"></i></span>
+                                <input type="text" name="specialization" class="form-control" placeholder="e.g. MRI & CT Neuro-Imaging">
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Add Radiologist</button>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="bi bi-check-lg"></i> Register Radiologist
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-7">
-            <h5 class="mb-3">Existing Radiologists</h5>
-            {% if radiologists %}
-            <table class="table table-hover table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Specialization</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rad in radiologists %}
-                    <tr>
-                        <td>Dr. {{ rad.user.name }}</td>
-                        <td>{{ rad.user.email }}</td>
-                        <td>{{ rad.specialization or 'Not set' }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="text-muted">No radiologists added yet.</p>
-            {% endif %}
+        <!-- Radiologists Directory -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span class="fw-semibold">Active Diagnostic Radiologists ({{ radiologists|length }})</span>
+                    <span class="badge bg-secondary">Total: {{ radiologists|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if radiologists %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Radiologist</th>
+                                    <th>Email Address</th>
+                                    <th>Imaging Specialty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for rad in radiologists %}
+                                <tr>
+                                    <td class="text-muted fw-bold">{{ loop.index }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="stat-icon info p-0" style="width: 36px; height: 36px; font-size: 1rem;">
+                                                <i class="bi bi-person-badge"></i>
+                                            </div>
+                                            <span class="fw-semibold">Dr. {{ rad.user.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ rad.user.email }}</span>
+                                    </td>
+                                    <td>
+                                        {% if rad.specialization %}
+                                            <span class="badge bg-info-soft">{{ rad.specialization }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-soft">General Diagnostics</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state p-4 my-0 border-0">
+                        <div class="empty-state-icon" style="width: 56px; height: 56px; font-size: 1.6rem;">
+                            <i class="bi bi-camera"></i>
+                        </div>
+                        <h5 class="empty-state-title">No Radiologists Registered</h5>
+                        <p class="empty-state-desc small mb-0">Use the form on the left to add your first diagnostic radiology specialist.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>

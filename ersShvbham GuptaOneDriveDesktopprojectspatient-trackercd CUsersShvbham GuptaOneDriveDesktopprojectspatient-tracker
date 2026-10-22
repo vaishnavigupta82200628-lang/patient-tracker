@@ -1,0 +1,179 @@
+[1mdiff --git a/app/admin/routes.py b/app/admin/routes.py[m
+[1mindex 0c9e815..3c14ace 100644[m
+[1m--- a/app/admin/routes.py[m
+[1m+++ b/app/admin/routes.py[m
+[36m@@ -1,6 +1,7 @@[m
+ from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file[m
+ from flask_login import login_required, current_user[m
+ from datetime import datetime[m
+[32m+[m
+ from app.extensions import db[m
+ from app.models import User, Doctor, Patient, Appointment, MedicalRecord, RadiologyAppointment, Machine, Radiologist[m
+ from app.utils import role_required, generate_csv, create_notification[m
+[36m@@ -99,6 +100,10 @@[m [mdef export_patients_csv():[m
+         mimetype='text/csv'[m
+     )[m
+ [m
+[32m+[m
+[32m+[m[32m# ==========================================[m
+[32m+[m[32m# RADIOLOGY REQUESTS[m
+[32m+[m[32m# ==========================================[m
+ @admin_bp.route('/radiology-requests')[m
+ @login_required[m
+ @role_required('admin')[m
+[36m@@ -120,7 +125,6 @@[m [mdef radiology_requests():[m
+ def radiology_request_detail(appointment_id):[m
+     appointment = RadiologyAppointment.query.get_or_404(appointment_id)[m
+ [m
+[31m-    # Machines matching this test type, for the assignment dropdown[m
+     matching_machines = Machine.query.filter_by(test_type=appointment.test.name, is_available=True).all()[m
+     radiologists = Radiologist.query.all()[m
+ [m
+[36m@@ -201,6 +205,10 @@[m [mdef request_new_prescription(appointment_id):[m
+     flash('Patient has been asked to re-upload their prescription.', 'info')[m
+     return redirect(url_for('admin.radiology_requests'))[m
+ [m
+[32m+[m
+[32m+[m[32m# ==========================================[m
+[32m+[m[32m# RADIOLOGISTS[m
+[32m+[m[32m# ==========================================[m
+ @admin_bp.route('/radiologists', methods=['GET', 'POST'])[m
+ @login_required[m
+ @role_required('admin')[m
+[36m@@ -229,4 +237,14 @@[m [mdef manage_radiologists():[m
+         return redirect(url_for('admin.manage_radiologists'))[m
+ [m
+     radiologists = Radiologist.query.all()[m
+[31m-    return render_template('admin/manage_radiologists.html', radiologists=radiologists)[m
+\ No newline at end of file[m
+[32m+[m[32m    return render_template('admin/manage_radiologists.html', radiologists=radiologists)[m
+[32m+[m
+[32m+[m
+[32m+[m[32m# ==========================================[m
+[32m+[m[32m# ANALYTICS[m
+[32m+[m[32m# ==========================================[m
+[32m+[m[32m@admin_bp.route('/analytics')[m
+[32m+[m[32m@login_required[m
+[32m+[m[32m@role_required('admin')[m
+[32m+[m[32mdef analytics():[m
+[32m+[m[32m    return render_template('admin/analytics.html')[m
+\ No newline at end of file[m
+[1mdiff --git a/app/api/routes.py b/app/api/routes.py[m
+[1mindex 008d243..2a714a6 100644[m
+[1m--- a/app/api/routes.py[m
+[1m+++ b/app/api/routes.py[m
+[36m@@ -1,7 +1,9 @@[m
+ from flask import Blueprint, jsonify, request[m
+ from flask_login import login_required, current_user[m
+[32m+[m[32mfrom sqlalchemy import func[m
+ [m
+[31m-from app.models import Appointment, MedicalRecord, SymptomLog, Doctor, Patient[m
+[32m+[m[32mfrom app.extensions import db[m
+[32m+[m[32mfrom app.models import Appointment, MedicalRecord, SymptomLog, Doctor, Patient, Payment, Review[m
+ from app.utils import role_required[m
+ [m
+ api_bp = Blueprint('api', __name__, url_prefix='/api/v1')[m
+[36m@@ -38,12 +40,6 @@[m [mdef record_to_dict(record):[m
+ @api_bp.route('/appointments', methods=['GET'])[m
+ @login_required[m
+ def get_appointments():[m
+[31m-    """[m
+[31m-    Returns appointments scoped to the logged-in user's role:[m
+[31m-    - Admin sees all appointments[m
+[31m-    - Doctor sees only their own[m
+[31m-    - Patient sees only their own[m
+[31m-    """[m
+     if current_user.role == 'admin':[m
+         appointments = Appointment.query.all()[m
+ [m
+[36m@@ -76,7 +72,6 @@[m [mdef get_single_appointment(appointment_id):[m
+     if not appointment:[m
+         return jsonify({'error': 'Appointment not found'}), 404[m
+ [m
+[31m-    # Authorization check: make sure this user is allowed to see this appointment[m
+     if current_user.role == 'patient':[m
+         patient = Patient.query.filter_by(user_id=current_user.id).first()[m
+         if not patient or appointment.patient_id != patient.id:[m
+[36m@@ -87,8 +82,6 @@[m [mdef get_single_appointment(appointment_id):[m
+         if not doctor or appointment.doctor_id != doctor.id:[m
+             return jsonify({'error': 'Forbidden'}), 403[m
+ [m
+[31m-    # Admins can view any appointment (no extra check needed)[m
+[31m-[m
+     return jsonify(appointment_to_dict(appointment)), 200[m
+ [m
+ [m
+[36m@@ -134,4 +127,70 @@[m [mdef get_system_stats():[m
+         'completed_appointments': Appointment.query.filter_by(status='completed').count(),[m
+         'total_records': MedicalRecord.query.count(),[m
+         'total_symptom_logs': SymptomLog.query.count()[m
+[31m-    }), 200[m
+\ No newline at end of file[m
+[32m+[m[32m    }), 200[m
+[32m+[m
+[32m+[m
+[32m+[m[32m# ==========================================[m
+[32m+[m[32m# ANALYTICS API[m
+[32m+[m[32m# ==========================================[m
+[32m+[m[32m@api_bp.route('/analytics/revenue', methods=['GET'])[m
+[32m+[m[32m@login_required[m
+[32m+[m[32m@role_required('admin')[m
+[32m+[m[32mdef get_revenue_analytics():[m
+[32m+[m[32m    payments = Payment.query.filter_by(status='paid').all()[m
+[32m+[m
+[32m+[m[32m    revenue_by_month = {}[m
+[32m+[m[32m    for p in payments:[m
+[32m+[m[32m        if p.paid_at:[m
+[32m+[m[32m            month_key = p.paid_at.strftime('%Y-%m')[m
+[32m+[m[32m            revenue_by_month[month_key] = revenue_by_month.get(month_key, 0) + p.amount[m
+[32m+[m
+[32m+[m[32m    sorted_months = sorted(revenue_by_month.keys())[m
+[32m+[m
+[32m+[m[32m    return jsonify({[m
+[32m+[m[32m        'total_revenue': sum(revenue_by_month.values()),[m
+[32m+[m[32m        'total_transactions': len(payments),[m
+[32m+[m[32m        'labels': sorted_months,[m
+[32m+[m[32m        'values': [revenue_by_month[m] for m in sorted_months][m
+[32m+[m[32m    }), 200[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@api_bp.route('/analytics/disease-trends', methods=['GET'])[m
+[32m+[m[32m@login_required[m
+[32m+[m[32m@role_required('admin')[m
+[32m+[m[32mdef get_disease_trends():[m
+[32m+[m[32m    logs = SymptomLog.query.filter(SymptomLog.predicted_disease.isnot(None)).all()[m
+[32m+[m
+[32m+[m[32m    disease_counts = {}[m
+[32m+[m[32m    for log in logs:[m
+[32m+[m[32m        disease_counts[log.predicted_disease] = disease_counts.get(log.predicted_disease, 0) + 1[m
+[32m+[m
+[32m+[m[32m    sorted_diseases = sorted(disease_counts.items(), key=lambda x: x[1], reverse=True)[:10][m
+[32m+[m
+[32m+[m[32m    return jsonify({[m
+[32m+[m[32m        'labels': [d[0] for d in sorted_diseases],[m
+[32m+[m[32m        'values': [d[1] for d in sorted_diseases][m
+[32m+[m[32m    }), 200[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@api_bp.route('/analytics/top-doctors', methods=['GET'])[m
+[32m+[m[32m@login_required[m
+[32m+[m[32m@role_required('admin')[m
+[32m+[m[32mdef get_top_doctors():[m
+[32m+[m[32m    results = db.session.query([m
+[32m+[m[32m        Doctor.id,[m
+[32m+[m[32m        func.avg(Review.rating).label('avg_rating'),[m
+[32m+[m[32m        func.count(Review.id).label('review_count')[m
+[32m+[m[32m    ).join(Review, Review.doctor_id == Doctor.id).group_by(Doctor.id).order_by(func.avg(Review.rating).desc()).limit(5).all()[m
+[32m+[m
+[32m+[m[32m    doctors_data = [][m
+[32m+[m[32m    for doctor_id, avg_rating, review_count in results:[m
+[32m+[m[32m        doctor = Doctor.query.get(doctor_id)[m
+[32m+[m[32m        doctors_data.append({[m
+[32m+[m[32m            'name': doctor.user.name,[m
+[32m+[m[32m            'specialization': doctor.specialization or 'General',[m
+[32m+[m[32m            'avg_rating': round(avg_rating, 1),[m
+[32m+[m[32m            'review_count': review_count[m
+[32m+[m[32m        })[m
+[32m+[m
+[32m+[m[32m    return jsonify({'doctors': doctors_data}), 200[m
+\ No newline at end of file[m

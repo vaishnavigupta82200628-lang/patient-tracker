@@ -1,43 +1,88 @@
 {% extends 'base.html' %}
-{% block title %}Medical Records{% endblock %}
+{% block title %}Medical Records — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>My Medical Records</h2>
-    <div>
-        {% if records %}
-        <a href="{{ url_for('patient.download_records_pdf') }}" class="btn btn-success btn-sm me-2">📄 Download PDF</a>
-        {% endif %}
-        <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Electronic Health Records</span>
+                <span class="text-muted small">&bull; Clinical History</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-file-earmark-medical text-primary me-2"></i>My Medical Records</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if records %}
+            <a href="{{ url_for('patient.download_records_pdf') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Download Complete PDF
+            </a>
+            {% endif %}
+            <a href="{{ url_for('patient.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
     </div>
-</div>
 
     {% if records %}
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Doctor</th>
-                <th>Diagnosis</th>
-                <th>Prescription</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for record in records %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>Dr. {{ record.doctor.user.name }}</td>
-                <td>{{ record.diagnosis or 'Not specified' }}</td>
-                <td>{{ record.prescription or 'Not specified' }}</td>
-                <td>{{ record.created_at.strftime('%d %b %Y') }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">Recorded Consultations ({{ records|length }})</span>
+            <span class="badge bg-secondary">Total: {{ records|length }} Records</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Attending Physician</th>
+                            <th>Clinical Diagnosis</th>
+                            <th>Prescribed Treatment</th>
+                            <th class="text-end">Record Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td class="text-muted fw-bold">{{ loop.index }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon primary p-0" style="width: 36px; height: 36px; font-size: 1rem;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <span class="fw-semibold">Dr. {{ record.doctor.user.name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary-soft fs-6">{{ record.diagnosis or 'General Diagnosis' }}</span>
+                            </td>
+                            <td>
+                                <div class="small text-secondary" style="max-width: 350px;">
+                                    {{ record.prescription or 'No specific medication recorded' }}
+                                </div>
+                            </td>
+                            <td class="text-end text-muted small">
+                                <i class="bi bi-calendar3 me-1"></i>{{ record.created_at.strftime('%d %b %Y') }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-    <p class="text-muted">No medical records yet.</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-folder-x"></i>
+        </div>
+        <h4 class="empty-state-title">No Medical Records on File</h4>
+        <p class="empty-state-desc">Once you complete doctor consultations, diagnoses and digital prescriptions will be securely filed and downloadable here.</p>
+        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-calendar-plus me-1"></i> Schedule a Consultation
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

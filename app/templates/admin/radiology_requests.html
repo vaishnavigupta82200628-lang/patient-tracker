@@ -1,65 +1,132 @@
 {% extends 'base.html' %}
-{% block title %}Radiology Requests{% endblock %}
+{% block title %}Radiology Requests — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📷 Radiology Requests</h2>
-        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
-    </div>
-
-    <div class="mb-3">
-        <div class="btn-group">
-            <a href="{{ url_for('admin.radiology_requests', status='all') }}"
-               class="btn btn-sm {{ 'btn-primary' if status_filter == 'all' else 'btn-outline-primary' }}">All</a>
-            <a href="{{ url_for('admin.radiology_requests', status='pending_approval') }}"
-               class="btn btn-sm {{ 'btn-primary' if status_filter == 'pending_approval' else 'btn-outline-primary' }}">Pending</a>
-            <a href="{{ url_for('admin.radiology_requests', status='slot_assigned') }}"
-               class="btn btn-sm {{ 'btn-primary' if status_filter == 'slot_assigned' else 'btn-outline-primary' }}">Approved</a>
-            <a href="{{ url_for('admin.radiology_requests', status='rejected') }}"
-               class="btn btn-sm {{ 'btn-primary' if status_filter == 'rejected' else 'btn-outline-primary' }}">Rejected</a>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Diagnostic Workflow</span>
+                <span class="text-muted small">&bull; Prescription & Slot Review</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-camera-fill text-primary me-2"></i>Radiology Test Requests</h2>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
     </div>
 
+    <!-- Filter Pills -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{{ url_for('admin.radiology_requests', status='all') }}"
+           class="btn btn-sm rounded-pill {{ 'btn-primary' if status_filter == 'all' else 'btn-outline-secondary' }}">
+            All Requests
+        </a>
+        <a href="{{ url_for('admin.radiology_requests', status='pending_approval') }}"
+           class="btn btn-sm rounded-pill {{ 'btn-warning' if status_filter == 'pending_approval' else 'btn-outline-secondary' }}">
+            <i class="bi bi-hourglass-split me-1"></i> Pending Review
+        </a>
+        <a href="{{ url_for('admin.radiology_requests', status='slot_assigned') }}"
+           class="btn btn-sm rounded-pill {{ 'btn-success' if status_filter == 'slot_assigned' else 'btn-outline-secondary' }}">
+            <i class="bi bi-check-circle me-1"></i> Slot Assigned
+        </a>
+        <a href="{{ url_for('admin.radiology_requests', status='rejected') }}"
+           class="btn btn-sm rounded-pill {{ 'btn-danger' if status_filter == 'rejected' else 'btn-outline-secondary' }}">
+            <i class="bi bi-x-circle me-1"></i> Rejected
+        </a>
+    </div>
+
     {% if requests_list %}
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>Booking ID</th>
-                <th>Patient</th>
-                <th>Test</th>
-                <th>Preferred Date</th>
-                <th>Prescription</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for req in requests_list %}
-            <tr>
-                <td>{{ req.booking_id }}</td>
-                <td>{{ req.full_name }}</td>
-                <td>{{ req.test.name }}</td>
-                <td>{{ req.preferred_date.strftime('%d %b %Y') }}</td>
-                <td>
-                    {% if req.prescription.verification_status == 'verified' %}
-                        <span class="badge bg-success">Verified</span>
-                    {% else %}
-                        <span class="badge bg-warning">Needs Review</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <span class="badge bg-secondary">{{ req.status.replace('_', ' ').title() }}</span>
-                </td>
-                <td>
-                    <a href="{{ url_for('admin.radiology_request_detail', appointment_id=req.id) }}" class="btn btn-primary btn-sm">View</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">Queue Items ({{ requests_list|length }})</span>
+            <span class="badge bg-secondary">Current Filter: {{ status_filter.replace('_', ' ').title() }}</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Patient Name</th>
+                            <th>Diagnostic Test</th>
+                            <th>Preferred Date</th>
+                            <th>Prescription OCR</th>
+                            <th>Status</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests_list %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary-soft text-primary font-monospace fw-bold">
+                                    {{ req.booking_id }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ req.full_name }}</div>
+                                <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ req.mobile_number }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-medium text-dark">{{ req.test.name }}</div>
+                                <small class="text-muted">₹{{ req.test.base_price }}</small>
+                            </td>
+                            <td>
+                                <span><i class="bi bi-calendar3 me-1 text-muted"></i>{{ req.preferred_date.strftime('%d %b %Y') }}</span>
+                                <div class="small text-muted">{{ req.preferred_time_slot }}</div>
+                            </td>
+                            <td>
+                                {% if req.prescription.verification_status == 'verified' %}
+                                    <span class="badge bg-success-soft">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Verified OCR
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning-soft">
+                                        <i class="bi bi-eye-fill me-1"></i> Needs Review
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'pending_approval' %}
+                                    <span class="badge bg-warning-soft">Pending Approval</span>
+                                {% elif req.status == 'slot_assigned' %}
+                                    <span class="badge bg-success-soft">Slot Assigned</span>
+                                {% elif req.status == 'report_ready' %}
+                                    <span class="badge bg-info-soft">Report Ready</span>
+                                {% elif req.status == 'rejected' %}
+                                    <span class="badge bg-danger-soft">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-soft">{{ req.status.replace('_', ' ').title() }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('admin.radiology_request_detail', appointment_id=req.id) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-arrow-up-right-square"></i> Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-    <p class="text-muted">No radiology requests found.</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-inbox"></i>
+        </div>
+        <h4 class="empty-state-title">No Radiology Requests Found</h4>
+        <p class="empty-state-desc">There are no diagnostic test requests matching the selected filter "{{ status_filter.replace('_', ' ').title() }}".</p>
+        <a href="{{ url_for('admin.radiology_requests', status='all') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-repeat"></i> View All Requests
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

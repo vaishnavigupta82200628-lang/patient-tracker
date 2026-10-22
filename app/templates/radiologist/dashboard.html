@@ -1,61 +1,117 @@
 {% extends 'base.html' %}
-{% block title %}Radiologist Dashboard{% endblock %}
+{% block title %}Radiologist Dashboard — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Welcome, Dr. {{ current_user.name }}</h2>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info">Diagnostic Imaging Wing</span>
+                <span class="text-muted small">&bull; Radiologist Workstation</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1">Welcome, Dr. {{ current_user.name }}</h2>
+            <p class="text-muted small mb-0">{{ radiologist.specialization or 'Diagnostic Radiology Specialist' }}</p>
+        </div>
+        <div>
+            <span class="badge bg-primary-soft p-2 fs-6">
+                <i class="bi bi-clock-history me-1"></i> Today: {{ upcoming|length }} Assigned Scans
+            </span>
+        </div>
+    </div>
 
+    <!-- 2 Stat Cards -->
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-primary">
-                <div class="card-body text-center">
-                    <h3>{{ upcoming|length }}</h3>
-                    <p class="mb-0">Upcoming Tests</p>
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="bi bi-camera-fill"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ upcoming|length }}</div>
+                    <div class="stat-label">Upcoming Scheduled Tests</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-success">
-                <div class="card-body text-center">
-                    <h3>{{ completed_count }}</h3>
-                    <p class="mb-0">Reports Completed</p>
+
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="bi bi-file-earmark-check-fill"></i>
+                </div>
+                <div class="stat-data">
+                    <div class="stat-value">{{ completed_count }}</div>
+                    <div class="stat-label">Reports Finalized & Published</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <h5 class="mb-3">Upcoming Appointments</h5>
+    <!-- Upcoming Schedule Table -->
     {% if upcoming %}
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>Booking ID</th>
-                <th>Patient</th>
-                <th>Test</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Room</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for appt in upcoming %}
-            <tr>
-                <td>{{ appt.booking_id }}</td>
-                <td>{{ appt.full_name }}</td>
-                <td>{{ appt.test.name }}</td>
-                <td>{{ appt.scheduled_date.strftime('%d %b %Y') }}</td>
-                <td>{{ appt.scheduled_time }}</td>
-                <td>{{ appt.room_number }}</td>
-                <td>
-                    <a href="{{ url_for('radiologist.upload_report', appointment_id=appt.id) }}" class="btn btn-primary btn-sm">Upload Report</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold"><i class="bi bi-list-task text-primary me-2"></i>Assigned Diagnostic Schedule ({{ upcoming|length }})</span>
+            <span class="badge bg-secondary">Queue Status: Active</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Patient Name</th>
+                            <th>Diagnostic Test</th>
+                            <th>Scheduled Date</th>
+                            <th>Time Slot</th>
+                            <th>Room Location</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in upcoming %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary-soft text-primary font-monospace fw-bold">
+                                    {{ appt.booking_id }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ appt.full_name }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-medium text-dark">{{ appt.test.name }}</div>
+                            </td>
+                            <td>
+                                <span><i class="bi bi-calendar3 me-1 text-muted"></i>{{ appt.scheduled_date.strftime('%d %b %Y') }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary-soft"><i class="bi bi-clock me-1"></i>{{ appt.scheduled_time }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-soft text-dark">{{ appt.room_number }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('radiologist.upload_report', appointment_id=appt.id) }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-file-earmark-plus"></i> Upload Report
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-    <p class="text-muted">No upcoming appointments assigned to you.</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <h4 class="empty-state-title">No Pending Scans in Queue</h4>
+        <p class="empty-state-desc">You currently have no upcoming diagnostic imaging appointments assigned. As new test slots are approved by hospital administration, they will appear in your queue.</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

@@ -3,105 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Patient Tracker{% endblock %}</title>
+    <meta name="description" content="Patient Tracker - AI-Powered Hospital Management & Healthcare Workflow Platform">
+    <title>{% block title %}Patient Tracker - AI Hospital Management{% endblock %}</title>
+
+    <!-- Google Fonts: Poppins (headings) & Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 & Bootstrap Icons CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom Modern Medical Theme CSS -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- Top Sticky Modern Medical Navbar -->
+    <nav class="navbar navbar-expand-lg hospital-navbar">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.home') }}">🏥 Patient Tracker</a>
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
+                <span class="brand-icon-box">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                </span>
+                <span>Patient Tracker</span>
+            </a>
 
-            {% if current_user.is_authenticated %}
-            <button class="btn theme-toggle-btn btn-sm me-2 order-lg-2" onclick="toggleTheme()" id="themeToggleBtn" type="button">
-                🌙
-            </button>
+            <!-- Right-aligned action buttons (Mobile theme toggle & hamburger) -->
+            <div class="d-flex align-items-center order-lg-3 ms-auto ms-lg-0 gap-2">
+                <!-- Dark / Light Theme Toggle -->
+                <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtn" type="button" aria-label="Toggle theme" title="Toggle dark/light mode">
+                    <i class="bi bi-moon-stars-fill"></i>
+                </button>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLinks">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                {% if current_user.is_authenticated %}
+                <!-- Notifications Bell -->
+                <a href="{{ url_for('notifications.view_all') }}" class="nav-icon-badge-btn" title="Notifications" aria-label="Notifications">
+                    <i class="bi bi-bell-fill"></i>
+                    {% set unread_count = current_user.notifications | selectattr('is_read', 'equalto', false) | list | length %}
+                    {% if unread_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light p-1">
+                        {{ unread_count }}
+                        <span class="visually-hidden">unread notifications</span>
+                    </span>
+                    {% endif %}
+                </a>
 
-            <div class="collapse navbar-collapse" id="navbarLinks">
-                <ul class="navbar-nav me-auto">
-                    {% if current_user.role == 'admin' %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_doctors') }}">Doctors</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.manage_patients') }}">Patients</a></li>
+                <!-- User Dropdown Profile -->
+                <div class="dropdown user-profile-dropdown">
+                    <button class="btn btn-user dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="user-avatar-badge">{{ current_user.name[:1].upper() }}</span>
+                        <span class="d-none d-sm-inline">{{ current_user.name }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li class="px-3 py-2 border-bottom">
+                            <div class="fw-semibold text-truncate">{{ current_user.name }}</div>
+                            <div class="small text-muted text-truncate">{{ current_user.email }}</div>
+                            <span class="badge bg-primary text-uppercase mt-1" style="font-size: 0.65rem;">{{ current_user.role }}</span>
+                        </li>
+                        <li>
+                            <a class="dropdown-item mt-1" href="{{ url_for('auth.change_password') }}">
+                                <i class="bi bi-shield-lock text-primary"></i> Change Password
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-                    {% elif current_user.role == 'doctor' %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.dashboard') }}">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.appointments') }}">Appointments</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('doctor.profile') }}">Profile</a></li>
+                {% else %}
+                <div class="d-none d-sm-flex align-items-center gap-2">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-person-plus-fill"></i> Register
+                    </a>
+                </div>
+                {% endif %}
 
-                    {% elif current_user.role == 'patient' %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.dashboard') }}">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.book_appointment') }}">Book Appointment</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.appointments') }}">My Appointments</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.records') }}">Medical Records</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.symptom_checker') }}">🤖 Symptom Checker</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.profile') }}">Profile</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('radiology.book_test') }}">📷 Diagnostic Test</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('patient.my_diagnostic_tests') }}">📷 Diagnostic Tests</a></li>
+                <!-- Mobile Hamburger Toggle -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLinks" aria-controls="navbarLinks" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+            </div>
+
+            <!-- Collapsible Navigation Links -->
+            <div class="collapse navbar-collapse order-lg-2" id="navbarLinks">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.manage_doctors') }}">
+                                    <i class="bi bi-person-badge"></i> Doctors
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.manage_patients') }}">
+                                    <i class="bi bi-people"></i> Patients
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.manage_radiologists') }}">
+                                    <i class="bi bi-radioactive"></i> Radiologists
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.radiology_requests') }}">
+                                    <i class="bi bi-clipboard2-pulse"></i> Radiology Requests
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.analytics') }}">
+                                    <i class="bi bi-graph-up-arrow"></i> Analytics
+                                </a>
+                            </li>
+
+                        {% elif current_user.role == 'doctor' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('doctor.dashboard') }}">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('doctor.appointments') }}">
+                                    <i class="bi bi-calendar-check"></i> Appointments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('doctor.profile') }}">
+                                    <i class="bi bi-person-circle"></i> Profile
+                                </a>
+                            </li>
+
+                        {% elif current_user.role == 'radiologist' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('radiologist.dashboard') }}">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+
+                        {% elif current_user.role == 'patient' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.dashboard') }}">
+                                    <i class="bi bi-house-door"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.book_appointment') }}">
+                                    <i class="bi bi-calendar-plus"></i> Book Doctor
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.appointments') }}">
+                                    <i class="bi bi-calendar3"></i> My Appointments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.records') }}">
+                                    <i class="bi bi-file-earmark-medical"></i> Records
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.symptom_checker') }}">
+                                    <i class="bi bi-robot"></i> AI Symptom Checker
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('radiology.book_test') }}">
+                                    <i class="bi bi-camera"></i> Book Diagnostic Test
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.my_diagnostic_tests') }}">
+                                    <i class="bi bi-ui-checks-grid"></i> My Tests
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('patient.profile') }}">
+                                    <i class="bi bi-person-circle"></i> Profile
+                                </a>
+                            </li>
+                        {% endif %}
+
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.home') }}">
+                                <i class="bi bi-house"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item d-sm-none">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item d-sm-none">
+                            <a class="nav-link" href="{{ url_for('auth.register') }}">
+                                <i class="bi bi-person-plus-fill"></i> Register
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
-
-                <div class="d-flex align-items-center">
-                    <a href="{{ url_for('notifications.view_all') }}" class="btn btn-outline-light btn-sm me-2 position-relative">
-                        🔔
-                        {% set unread_count = current_user.notifications | selectattr('is_read', 'equalto', false) | list | length %}
-                        {% if unread_count > 0 %}
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ unread_count }}
-                        </span>
-                        {% endif %}
-                    </a>
-                    <div class="dropdown d-inline-block me-2">
-                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Hi, {{ current_user.name }}
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">🔑 Change Password</a></li>
-                        </ul>
-                    </div>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
-                </div>
             </div>
-
-            {% else %}
-            <div class="ms-auto">
-                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-sm me-2">Login</a>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-sm">Register</a>
-            </div>
-            {% endif %}
         </div>
     </nav>
 
+    <!-- Flash Messages (Styled Toast/Alert Style) -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="container mt-3">
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    {% set alert_type = 'primary' %}
+                    {% set alert_icon = 'bi-info-circle-fill' %}
+                    {% if category == 'success' %}
+                        {% set alert_type = 'success' %}
+                        {% set alert_icon = 'bi-check-circle-fill' %}
+                    {% elif category == 'danger' or category == 'error' %}
+                        {% set alert_type = 'danger' %}
+                        {% set alert_icon = 'bi-exclamation-triangle-fill' %}
+                    {% elif category == 'warning' %}
+                        {% set alert_type = 'warning' %}
+                        {% set alert_icon = 'bi-exclamation-circle-fill' %}
+                    {% elif category == 'info' %}
+                        {% set alert_type = 'info' %}
+                        {% set alert_icon = 'bi-info-circle-fill' %}
+                    {% endif %}
+                    <div class="alert alert-{{ alert_type }} alert-dismissible fade show align-items-center" role="alert">
+                        <i class="bi {{ alert_icon }} fs-5 me-2 flex-shrink-0"></i>
+                        <div class="flex-grow-1">{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             </div>
         {% endif %}
     {% endwith %}
 
-    {% block content %}{% endblock %}
+    <!-- Main Content Area -->
+    <main class="main-content-wrapper animate-fade-in">
+        {% block content %}{% endblock %}
+    </main>
 
-    <footer class="footer text-center">
+    <!-- Professional 3-Column Hospital Footer -->
+    <footer class="hospital-footer">
         <div class="container">
-            <p class="mb-1">🏥 Patient Tracker — AI Powered Hospital Management System</p>
-            <p class="mb-0">&copy; 2026 Patient Tracker. Built for Smart India Hackathon.</p>
+            <div class="row g-4">
+                <div class="col-lg-5 col-md-6">
+                    <div class="footer-brand">
+                        <i class="bi bi-heart-pulse-fill"></i>
+                        <span>Patient Tracker</span>
+                    </div>
+                    <p class="text-muted small pe-lg-4">
+                        An advanced, AI-powered hospital management platform designed to streamline doctor appointments, automated diagnostic radiology bookings, electronic health records, and intelligent symptom assessment.
+                    </p>
+                    <div class="d-flex gap-3 text-muted small mt-2">
+                        <span><i class="bi bi-shield-check text-success"></i> HIPAA Aligned</span>
+                        <span><i class="bi bi-cpu text-primary"></i> AI Powered</span>
+                        <span><i class="bi bi-lock-fill text-info"></i> End-to-End Secure</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="footer-heading">Quick Links</h6>
+                    <ul class="footer-links-list">
+                        <li><a href="{{ url_for('main.home') }}"><i class="bi bi-chevron-right me-1 small"></i> Home</a></li>
+                        {% if not current_user.is_authenticated %}
+                            <li><a href="{{ url_for('auth.login') }}"><i class="bi bi-chevron-right me-1 small"></i> Patient & Doctor Login</a></li>
+                            <li><a href="{{ url_for('auth.register') }}"><i class="bi bi-chevron-right me-1 small"></i> Register Account</a></li>
+                        {% else %}
+                            {% if current_user.role == 'patient' %}
+                                <li><a href="{{ url_for('patient.book_appointment') }}"><i class="bi bi-chevron-right me-1 small"></i> Book Appointment</a></li>
+                                <li><a href="{{ url_for('radiology.book_test') }}"><i class="bi bi-chevron-right me-1 small"></i> Diagnostic Test Booking</a></li>
+                                <li><a href="{{ url_for('patient.symptom_checker') }}"><i class="bi bi-chevron-right me-1 small"></i> AI Symptom Checker</a></li>
+                            {% elif current_user.role == 'doctor' %}
+                                <li><a href="{{ url_for('doctor.dashboard') }}"><i class="bi bi-chevron-right me-1 small"></i> Doctor Portal</a></li>
+                                <li><a href="{{ url_for('doctor.appointments') }}"><i class="bi bi-chevron-right me-1 small"></i> Manage Appointments</a></li>
+                            {% elif current_user.role == 'admin' %}
+                                <li><a href="{{ url_for('admin.dashboard') }}"><i class="bi bi-chevron-right me-1 small"></i> Admin Control Panel</a></li>
+                                <li><a href="{{ url_for('admin.analytics') }}"><i class="bi bi-chevron-right me-1 small"></i> Hospital Analytics</a></li>
+                            {% endif %}
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-12">
+                    <h6 class="footer-heading">Hospital Support & Contact</h6>
+                    <ul class="footer-links-list">
+                        <li class="d-flex align-items-center gap-2 text-muted small">
+                            <i class="bi bi-geo-alt-fill text-primary"></i> 100 Medical Center Drive, Healthcare Hub
+                        </li>
+                        <li class="d-flex align-items-center gap-2 text-muted small">
+                            <i class="bi bi-telephone-fill text-success"></i> Emergency Helpline: +91 1800-PATIENT
+                        </li>
+                        <li class="d-flex align-items-center gap-2 text-muted small">
+                            <i class="bi bi-envelope-fill text-info"></i> support@patienttracker.hospital
+                        </li>
+                        <li class="d-flex align-items-center gap-2 text-muted small">
+                            <i class="bi bi-clock-fill text-warning"></i> OPD & Diagnostics: 24/7 Service Available
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom-line d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                <div>
+                    &copy; 2026 <strong>Patient Tracker</strong>. Built for Smart India Hackathon.
+                </div>
+                <div class="d-flex gap-3">
+                    <span class="text-muted small">Trust & Care First</span>
+                    <span class="text-muted small">&bull;</span>
+                    <span class="text-muted small">AI-Assisted Medicine</span>
+                </div>
+            </div>
         </div>
     </footer>
 
+    <!-- Chart.js & Bootstrap 5 Bundle JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Theme Switcher Script (keeps existing logic and themeToggleBtn element ID) -->
     <script>
-        // Apply saved theme immediately on page load
         (function () {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -119,9 +349,14 @@
         function updateToggleIcon(theme) {
             const btn = document.getElementById('themeToggleBtn');
             if (btn) {
-                btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+                btn.innerHTML = theme === 'dark' 
+                    ? '<i class="bi bi-sun-fill text-warning"></i>' 
+                    : '<i class="bi bi-moon-stars-fill text-primary"></i>';
             }
         }
     </script>
+
+    <!-- Client Enhancements JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

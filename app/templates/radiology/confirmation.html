@@ -1,65 +1,128 @@
 {% extends 'base.html' %}
-{% block title %}Booking Confirmed{% endblock %}
+{% block title %}Booking Confirmed — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-7">
+<div class="container py-4">
+    <!-- Multi-Step Wizard Top Stepper (All Steps Completed) -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body p-4">
+            <div class="booking-stepper mb-0">
+                <div class="booking-step-item completed">
+                    <div class="booking-step-circle"><i class="bi bi-check-lg"></i></div>
+                    <div class="booking-step-label">Patient Details</div>
+                </div>
+                <div class="booking-step-item completed">
+                    <div class="booking-step-circle"><i class="bi bi-check-lg"></i></div>
+                    <div class="booking-step-label">Prescription</div>
+                </div>
+                <div class="booking-step-item completed">
+                    <div class="booking-step-circle"><i class="bi bi-check-lg"></i></div>
+                    <div class="booking-step-label">Payment</div>
+                </div>
+                <div class="booking-step-item completed active">
+                    <div class="booking-step-circle"><i class="bi bi-check-lg"></i></div>
+                    <div class="booking-step-label">Confirmation</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            <!-- Animated Success Hero Box -->
             <div class="text-center mb-4">
-                <div style="font-size: 4rem;">✅</div>
-                <h2 class="text-success">Appointment Request Submitted!</h2>
-                <p class="text-muted">Your request is now pending approval from our staff.</p>
+                <div class="stat-icon success mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem; animation: scaleInCheck 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <h2 class="fw-bold text-success mb-1">Appointment Request Submitted!</h2>
+                <p class="text-muted">Your payment has been received and your booking request is now logged in the hospital queue.</p>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title mb-3">Booking Details</h5>
-                    <div class="row mb-2">
-                        <div class="col-6 text-muted">Booking ID</div>
-                        <div class="col-6"><strong>{{ appointment.booking_id }}</strong></div>
+            <!-- Booking Details Card -->
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold"><i class="bi bi-ticket-perforated-fill text-primary me-2"></i>Official Booking Pass</span>
+                    <span class="badge bg-warning-soft">Pending Slot Allocation</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-3 pb-3 border-bottom">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Booking Reference ID</small>
+                            <span class="badge bg-primary-soft text-primary font-monospace fw-bold fs-6">
+                                {{ appointment.booking_id }}
+                            </span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Reception Token Number</small>
+                            <span class="badge bg-success-soft text-success font-monospace fw-bold fs-6">
+                                {{ appointment.token_number }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="row mb-2">
-                        <div class="col-6 text-muted">Token Number</div>
-                        <div class="col-6"><strong>{{ appointment.token_number }}</strong></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6 text-muted">Test</div>
-                        <div class="col-6">{{ appointment.test.name }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6 text-muted">Preferred Date</div>
-                        <div class="col-6">{{ appointment.preferred_date.strftime('%d %b %Y') }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6 text-muted">Time Slot</div>
-                        <div class="col-6">{{ appointment.preferred_time_slot }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6 text-muted">Status</div>
-                        <div class="col-6"><span class="badge bg-warning">Pending Approval</span></div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Diagnostic Modality</small>
+                            <span class="fw-bold fs-6">{{ appointment.test.name }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Hospital Campus</small>
+                            <span class="fw-medium">{{ appointment.hospital_branch or 'Main Campus' }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Preferred Date</small>
+                            <span class="fw-semibold"><i class="bi bi-calendar3 me-1 text-muted"></i>{{ appointment.preferred_date.strftime('%d %b %Y') }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Preferred Time Window</small>
+                            <span class="fw-semibold"><i class="bi bi-clock me-1 text-muted"></i>{{ appointment.preferred_time_slot }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Preparation Instructions (if any) -->
             {% if appointment.test.preparation_instructions %}
-            <div class="alert alert-info">
-                <strong>📋 Preparation Instructions:</strong><br>
-                {{ appointment.test.preparation_instructions }}
+            <div class="alert alert-info d-flex align-items-start gap-3 shadow-sm border-0 mb-4">
+                <i class="bi bi-info-circle-fill fs-4 text-info flex-shrink-0 mt-1"></i>
+                <div>
+                    <strong>Preparation Instructions for Your Scan:</strong>
+                    <div class="small mt-1">{{ appointment.test.preparation_instructions }}</div>
+                </div>
             </div>
             {% endif %}
 
-            <div class="text-center mb-4">
-                <img src="{{ url_for('radiology.generate_qr_code', appointment_id=appointment.id) }}"
-                     alt="QR Code" style="width: 150px; height: 150px;">
-                <p class="text-muted small mt-1">Scan this QR code at reception</p>
+            <!-- QR Code Check-in Card -->
+            <div class="card shadow-sm border-0 mb-4 text-center p-4">
+                <h6 class="fw-bold text-dark mb-1">Hospital Reception QR Check-in</h6>
+                <p class="text-muted small mb-3">Scan this code at the diagnostic radiology reception desk upon arrival.</p>
+                <div class="d-inline-block p-2 rounded-3 border bg-white mx-auto shadow-xs">
+                    <img src="{{ url_for('radiology.generate_qr_code', appointment_id=appointment.id) }}"
+                         alt="Reception QR Code" style="width: 160px; height: 160px;" class="d-block">
+                </div>
+                <small class="text-muted font-monospace mt-2 d-block">{{ appointment.booking_id }} &bull; Token: {{ appointment.token_number }}</small>
             </div>
 
-            <a href="{{ url_for('radiology.download_receipt_pdf', appointment_id=appointment.id) }}"
-               class="btn btn-outline-primary w-100 mb-2">📄 Download Receipt (PDF)</a>
+            <!-- Action Buttons -->
+            <div class="d-flex flex-column flex-sm-row gap-3">
+                <a href="{{ url_for('radiology.download_receipt_pdf', appointment_id=appointment.id) }}"
+                   class="btn btn-outline-primary w-100 py-2 fw-semibold">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF Receipt
+                </a>
 
-            <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary w-100">Back to Dashboard</a>
+                <a href="{{ url_for('patient.dashboard') }}" class="btn btn-primary w-100 py-2 fw-semibold">
+                    <i class="bi bi-house-door-fill me-1"></i> Return to Patient Dashboard
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+@keyframes scaleInCheck {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+</style>
 {% endblock %}

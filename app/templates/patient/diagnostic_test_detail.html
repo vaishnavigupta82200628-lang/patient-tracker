@@ -1,36 +1,62 @@
 {% extends 'base.html' %}
-{% block title %}Test Details{% endblock %}
+{% block title %}Diagnostic Test Details — {{ appointment.booking_id }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>{{ appointment.booking_id }}</h2>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info">Diagnostic Tracking</span>
+                <span class="font-monospace fw-bold text-muted">{{ appointment.booking_id }}</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1">{{ appointment.test.name }}</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
             <a href="{{ url_for('radiology.download_receipt_pdf', appointment_id=appointment.id) }}"
-               class="btn btn-success btn-sm me-2">📄 Download Receipt</a>
-            <a href="{{ url_for('patient.my_diagnostic_tests') }}" class="btn btn-outline-secondary btn-sm">← Back</a>
+               class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Download Receipt
+            </a>
+            <a href="{{ url_for('patient.my_diagnostic_tests') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> My Tests
+            </a>
         </div>
     </div>
 
     {% if appointment.status == 'rejected' %}
-    <div class="alert alert-danger">
-        ❌ This request was rejected. Please contact the hospital for more information, or submit a new request.
+    <div class="alert alert-danger d-flex align-items-center gap-3 mb-4 shadow-sm">
+        <i class="bi bi-x-circle-fill fs-3 text-danger"></i>
+        <div>
+            <h5 class="fw-bold mb-1">Appointment Request Not Approved</h5>
+            <p class="mb-0 small">This request could not be scheduled. Please contact hospital support or re-book with a verified doctor prescription.</p>
+        </div>
     </div>
     {% else %}
-    <!-- ---- Progress Timeline ---- -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h6 class="card-subtitle mb-3 text-muted">Progress Timeline</h6>
-            <div class="d-flex justify-content-between text-center">
-                {% set labels = ['Submitted', 'Payment', 'Approval', 'Slot Assigned', 'Report Ready'] %}
-                {% for label in labels %}
-                <div style="flex: 1;">
-                    <div class="step-circle mx-auto"
-                         style="width: 40px; height: 40px; font-size: 1rem;
-                                background: {{ 'linear-gradient(135deg, #16a34a, #22c55e)' if loop.index0 <= current_index else '#d1d5db' }};">
-                        {% if loop.index0 <= current_index %}✓{% else %}{{ loop.index }}{% endif %}
+    <!-- Modern Visual Progress Stepper Timeline -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-surface-subtle">
+            <span class="fw-semibold"><i class="bi bi-diagram-3-fill text-primary me-2"></i>Diagnostic Process Timeline</span>
+        </div>
+        <div class="card-body p-4">
+            <div class="booking-stepper">
+                {% set steps_info = [
+                    ('1', 'Submitted', 'Request Placed'),
+                    ('2', 'Payment', 'Cashless Paid'),
+                    ('3', 'Approval', 'Under Review'),
+                    ('4', 'Slot Assigned', 'Machine Slot'),
+                    ('5', 'Report Ready', 'Results Ready')
+                ] %}
+                {% for num, label, desc in steps_info %}
+                <div class="booking-step-item {{ 'completed' if loop.index0 < current_index else ('active' if loop.index0 == current_index else '') }}">
+                    <div class="booking-step-circle">
+                        {% if loop.index0 <= current_index %}
+                            <i class="bi bi-check-lg"></i>
+                        {% else %}
+                            {{ num }}
+                        {% endif %}
                     </div>
-                    <small class="d-block mt-1">{{ label }}</small>
+                    <div class="booking-step-label">{{ label }}</div>
+                    <small class="text-muted d-none d-sm-block" style="font-size: 0.72rem;">{{ desc }}</small>
                 </div>
                 {% endfor %}
             </div>
@@ -38,46 +64,110 @@
     </div>
     {% endif %}
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
+    <div class="row g-4">
+        <!-- Test Information & Prep instructions -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-surface-subtle d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle-fill text-primary"></i>
+                    <span class="fw-semibold">Test Booking Overview</span>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Test Information</h5>
-                    <p class="mb-1"><strong>Test:</strong> {{ appointment.test.name }}</p>
-                    <p class="mb-1"><strong>Preferred Date:</strong> {{ appointment.preferred_date.strftime('%d %b %Y') }}</p>
-                    <p class="mb-0"><strong>Status:</strong> {{ appointment.status.replace('_', ' ').title() }}</p>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Test Type</small>
+                            <span class="fw-bold fs-6">{{ appointment.test.name }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Preferred Date</small>
+                            <span class="fw-semibold">{{ appointment.preferred_date.strftime('%d %b %Y') }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Hospital Branch</small>
+                            <span class="fw-medium">{{ appointment.hospital_branch or 'Main Campus' }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Current Status</small>
+                            <span class="badge bg-primary-soft">{{ appointment.status.replace('_', ' ').title() }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {% if appointment.test.preparation_instructions %}
-            <div class="alert alert-info">
-                <strong>📋 Preparation Instructions:</strong><br>
-                {{ appointment.test.preparation_instructions }}
+            <div class="alert alert-info shadow-sm mb-4">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-lightbulb-fill text-info fs-5 mt-1"></i>
+                    <div>
+                        <strong>Preparation Instructions for Patient:</strong>
+                        <div class="small mt-1">{{ appointment.test.preparation_instructions }}</div>
+                    </div>
+                </div>
             </div>
             {% endif %}
         </div>
 
-        <div class="col-md-6">
-            {% if appointment.status == 'slot_assigned' %}
-            <div class="card mb-4 border-success">
+        <!-- Appointment Slot Confirmation & Report View -->
+        <div class="col-lg-6">
+            {% if appointment.status == 'slot_assigned' or appointment.status == 'report_ready' %}
+            <div class="card shadow-sm border-0 mb-4" style="border-top: 4px solid var(--success) !important;">
+                <div class="card-header bg-surface-subtle d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold text-success"><i class="bi bi-calendar-check-fill me-2"></i>Confirmed Machine Slot</span>
+                    <span class="badge bg-success-soft">Ready for Scan</span>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title text-success">✅ Appointment Confirmed</h5>
-                    <p class="mb-1"><strong>Machine:</strong> {{ appointment.machine.name }}</p>
-                    <p class="mb-1"><strong>Radiologist:</strong> Dr. {{ appointment.radiologist.user.name }}</p>
-                    <p class="mb-1"><strong>Date:</strong> {{ appointment.scheduled_date.strftime('%d %b %Y') }}</p>
-                    <p class="mb-1"><strong>Time:</strong> {{ appointment.scheduled_time }}</p>
-                    <p class="mb-0"><strong>Room:</strong> {{ appointment.room_number }}</p>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Assigned Machine</small>
+                            <span class="fw-bold">{{ appointment.machine.name if appointment.machine else '-' }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Radiologist</small>
+                            <span class="fw-semibold">Dr. {{ appointment.radiologist.user.name if appointment.radiologist else '-' }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Scheduled Date</small>
+                            <span class="fw-bold text-primary">{{ appointment.scheduled_date.strftime('%d %b %Y') if appointment.scheduled_date else '-' }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <small class="text-muted d-block">Scheduled Time</small>
+                            <span class="fw-bold text-primary">{{ appointment.scheduled_time or '-' }}</span>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted d-block">Wing & Room Location</small>
+                            <span class="badge bg-secondary-soft text-dark fs-6">{{ appointment.room_number or '-' }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endif %}
 
             {% if appointment.status == 'report_ready' and appointment.report %}
-            <div class="card mb-4 border-primary">
-                <div class="card-body">
-                    <h5 class="card-title text-primary">📄 Report</h5>
-                    <p class="mb-0">{{ appointment.report.findings }}</p>
-                    <small class="text-muted">Uploaded: {{ appointment.report.uploaded_at.strftime('%d %b %Y') }}</small>
+            <div class="card shadow-sm border-0 mb-4" style="border-top: 4px solid var(--primary) !important;">
+                <div class="card-header bg-surface-subtle d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold text-primary"><i class="bi bi-file-earmark-text-fill me-2"></i>Official Diagnostic Report</span>
+                    <span class="badge bg-primary-soft">Published</span>
                 </div>
+                <div class="card-body">
+                    <div class="p-3 rounded bg-surface-subtle border mb-3">
+                        <small class="text-muted d-block mb-1">Radiologist Clinical Findings:</small>
+                        <p class="mb-0 fw-medium" style="white-space: pre-wrap;">{{ appointment.report.findings }}</p>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center text-muted small">
+                        <span><i class="bi bi-calendar-check me-1"></i>Date: {{ appointment.report.uploaded_at.strftime('%d %b %Y') }}</span>
+                        <a href="{{ url_for('radiology.download_receipt_pdf', appointment_id=appointment.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download me-1"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% elif appointment.status != 'slot_assigned' and appointment.status != 'rejected' %}
+            <div class="card shadow-sm border-0 p-4 text-center">
+                <div class="stat-icon warning mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.6rem;">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <h5 class="fw-bold mb-1">Staff Verification in Progress</h5>
+                <p class="text-muted small mb-0">Our hospital radiology team is reviewing your prescription and available diagnostic slots. You will be notified as soon as your slot is confirmed.</p>
             </div>
             {% endif %}
         </div>

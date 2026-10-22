@@ -1,50 +1,105 @@
 {% extends 'base.html' %}
-{% block title %}Manage Doctors{% endblock %}
+{% block title %}Manage Doctors — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Manage Doctors</h2>
-    <div>
-        {% if doctors %}
-        <a href="{{ url_for('admin.export_doctors_csv') }}" class="btn btn-success btn-sm me-2">📊 Export CSV</a>
-        {% endif %}
-        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Hospital Staff</span>
+                <span class="text-muted small">&bull; Directory Management</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-person-badge-fill text-primary me-2"></i>Manage Doctors</h2>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if doctors %}
+            <a href="{{ url_for('admin.export_doctors_csv') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export CSV
+            </a>
+            {% endif %}
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
     </div>
-</div>
 
     {% if doctors %}
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Specialization</th>
-                <th>Qualification</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for doctor in doctors %}
-            <tr>
-                <td>{{ loop.index }}</td>
-                <td>{{ doctor.user.name }}</td>
-                <td>{{ doctor.user.email }}</td>
-                <td>{{ doctor.specialization or 'Not set' }}</td>
-                <td>{{ doctor.qualification or 'Not set' }}</td>
-                <td>
-                    <form action="{{ url_for('admin.delete_doctor', doctor_id=doctor.id) }}" method="POST"
-                          onsubmit="return confirm('Are you sure you want to remove this doctor?');">
-                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold">Registered Doctors Roster ({{ doctors|length }})</span>
+            <span class="badge bg-secondary">Total: {{ doctors|length }} Physicians</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">#</th>
+                            <th>Doctor Details</th>
+                            <th>Email Address</th>
+                            <th>Specialization</th>
+                            <th>Qualification</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in doctors %}
+                        <tr>
+                            <td class="text-muted fw-bold">{{ loop.index }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon primary p-0" style="width: 36px; height: 36px; font-size: 1rem;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-semibold">Dr. {{ doctor.user.name }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted small"><i class="bi bi-envelope me-1"></i>{{ doctor.user.email }}</span>
+                            </td>
+                            <td>
+                                {% if doctor.specialization %}
+                                    <span class="badge bg-primary-soft">{{ doctor.specialization }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-soft">Not Set</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if doctor.qualification %}
+                                    <span class="text-secondary small fw-medium">{{ doctor.qualification }}</span>
+                                {% else %}
+                                    <span class="text-muted small">Not specified</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <form action="{{ url_for('admin.delete_doctor', doctor_id=doctor.id) }}" method="POST"
+                                      onsubmit="return confirm('Are you sure you want to remove Dr. {{ doctor.user.name }} from the hospital?');" class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Remove doctor">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-    <p class="text-muted">No doctors registered yet.</p>
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-person-x"></i>
+        </div>
+        <h4 class="empty-state-title">No Doctors Registered Yet</h4>
+        <p class="empty-state-desc">When doctors sign up through the registration portal, their clinical profiles will appear here for management.</p>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-left"></i> Return to Dashboard
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

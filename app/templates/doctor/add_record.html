@@ -1,44 +1,85 @@
 {% extends 'base.html' %}
-{% block title %}Add Medical Record{% endblock %}
+{% block title %}Add Medical Record — Patient Tracker{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Add Medical Record</h2>
-        <a href="{{ url_for('doctor.appointments') }}" class="btn btn-outline-secondary btn-sm">← Back to Appointments</a>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-body">
-            <h6 class="card-subtitle mb-2 text-muted">Appointment Details</h6>
-            <p class="mb-1"><strong>Patient:</strong> {{ appointment.patient.user.name }}</p>
-            <p class="mb-1"><strong>Date:</strong> {{ appointment.date_time.strftime('%d %b %Y, %I:%M %p') }}</p>
-            <p class="mb-0"><strong>Reason:</strong> {{ appointment.reason or 'Not specified' }}</p>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary">Clinical Documentation</span>
+                <span class="text-muted small">&bull; Electronic Health Record</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-file-earmark-plus-fill text-primary me-2"></i>Create Medical Record</h2>
         </div>
+        <a href="{{ url_for('doctor.appointments') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Appointments
+        </a>
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-md-7">
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label">Diagnosis</label>
-                    <input type="text" name="diagnosis" class="form-control" placeholder="e.g. Seasonal Flu" required>
+        <div class="col-lg-8">
+            <!-- Patient Appointment Reference Card -->
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-surface-subtle d-flex align-items-center justify-content-between">
+                    <span class="fw-semibold"><i class="bi bi-info-circle-fill text-primary me-2"></i>Completed Visit Summary</span>
+                    <span class="badge bg-info-soft">Consultation Reference</span>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Prescription</label>
-                    <textarea name="prescription" class="form-control" rows="3"
-                              placeholder="e.g. Paracetamol 500mg twice daily for 5 days"></textarea>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <small class="text-muted d-block">Patient Name</small>
+                            <span class="fw-bold fs-6">{{ appointment.patient.user.name }}</span>
+                        </div>
+                        <div class="col-sm-4">
+                            <small class="text-muted d-block">Visit Date & Time</small>
+                            <span class="fw-semibold">{{ appointment.date_time.strftime('%d %b %Y, %I:%M %p') }}</span>
+                        </div>
+                        <div class="col-sm-4">
+                            <small class="text-muted d-block">Reported Symptoms / Reason</small>
+                            <span class="text-secondary small">{{ appointment.reason or 'General Medical Evaluation' }}</span>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Additional Notes</label>
-                    <textarea name="notes" class="form-control" rows="3"
-                              placeholder="Any additional observations or follow-up instructions"></textarea>
+            <!-- Medical Record Creation Card -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-medical"></i>
+                    <span class="fw-semibold">Physician Clinical Entry</span>
                 </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Clinical Diagnosis *</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-clipboard2-pulse text-muted"></i></span>
+                                <input type="text" name="diagnosis" class="form-control" 
+                                       placeholder="e.g. Acute Bronchitis, Hypertension Stage 1" required>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.78rem;">Primary diagnostic finding from the consultation.</small>
+                        </div>
 
-                <button type="submit" class="btn btn-primary w-100">Save Record</button>
-            </form>
+                        <div class="mb-3">
+                            <label class="form-label">Medications & Prescription</label>
+                            <textarea name="prescription" class="form-control" rows="4"
+                                      placeholder="e.g. 1. Amoxicillin 500mg - 1 tablet three times daily for 7 days&#10;2. Paracetamol 650mg - as needed for fever&#10;3. Warm saline gargles twice daily"></textarea>
+                            <small class="text-muted" style="font-size: 0.78rem;">Include dosage, frequency, duration, and special dietary guidance.</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Physician Notes & Follow-Up Advice</label>
+                            <textarea name="notes" class="form-control" rows="3"
+                                      placeholder="e.g. Patient advised complete bed rest for 3 days. Return for review if fever persists past 48 hours."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="bi bi-check2-circle fs-5 me-1"></i> Finalize & Save Medical Record
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
