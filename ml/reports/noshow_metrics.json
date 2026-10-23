@@ -1,0 +1,71 @@
+{
+  "dataset": "Kaggle Medical Appointment No Shows (Brazil, 2016)",
+  "rows_used": 110514,
+  "no_show_rate": 0.2019,
+  "features": [
+    "age",
+    "gender_male",
+    "lead_days",
+    "dow",
+    "prev_appts",
+    "prev_noshows"
+  ],
+  "best_model": "Gradient Boosting",
+  "models": {
+    "Logistic Regression": {
+      "accuracy": 0.6811,
+      "precision": 0.3245,
+      "recall": 0.5359,
+      "f1": 0.4042,
+      "roc_auc": 0.6743,
+      "pr_auc": 0.3222,
+      "confusion_matrix": [
+        [
+          12663,
+          4978
+        ],
+        [
+          2071,
+          2391
+        ]
+      ]
+    },
+    "Random Forest": {
+      "accuracy": 0.593,
+      "precision": 0.3082,
+      "recall": 0.8162,
+      "f1": 0.4474,
+      "roc_auc": 0.7365,
+      "pr_auc": 0.3863,
+      "confusion_matrix": [
+        [
+          9465,
+          8176
+        ],
+        [
+          820,
+          3642
+        ]
+      ]
+    },
+    "Gradient Boosting": {
+      "accuracy": 0.5836,
+      "precision": 0.3054,
+      "recall": 0.8339,
+      "f1": 0.4471,
+      "roc_auc": 0.7382,
+      "pr_auc": 0.3873,
+      "confusion_matrix": [
+        [
+          9178,
+          8463
+        ],
+        [
+          741,
+          3721
+        ]
+      ]
+    }
+  },
+  "note": "Accuracy alone is misleading: ~80% of patients show up, so a model that always predicts 'will attend' gets ~80% accuracy but catches zero no-shows. Recall, ROC-AUC and PR-AUC are the meaningful metrics here."
+}

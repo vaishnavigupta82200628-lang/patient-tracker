@@ -156,6 +156,48 @@
             </div>
         </div>
 
+                        <!-- High-Risk Upcoming Appointments Card -->
+                        <div class="col-lg-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-header bg-surface-subtle d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>High-Risk Upcoming Appointments</span>
+                                    <small class="text-muted">Next 7 days</small>
+                                </div>
+                                <div class="card-body p-0">
+                                    {% if high_risk_appointments %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th>Date &amp; Time</th>
+                                                    <th>Patient</th>
+                                                    <th>Risk</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for appt in high_risk_appointments %}
+                                                <tr>
+                                                    <td>{{ appt.date_time.strftime('%d %b %Y, %I:%M %p') }}</td>
+                                                    <td>{{ appt.patient.user.name }}</td>
+                                                    <td>
+                                                        {% set res = predict_no_show(appt) %}
+                                                        {% if res %}
+                                                        {% set prob, level = res %}
+                                                        <span class="badge {% if level == 'Low' %}bg-success{% elif level == 'Medium' %}bg-warning{% elif level == 'High' %}bg-danger{% else %}bg-secondary{% endif %}" data-bs-toggle="tooltip" title="Risk estimate for scheduling assistance only.">{{ (prob * 100) | round }}% ({{ level }})</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-center text-muted small my-3">No high-risk appointments in the next 7 days.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
         <div class="col-lg-4">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header bg-surface-subtle">

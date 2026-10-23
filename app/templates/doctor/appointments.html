@@ -86,6 +86,10 @@
                                         <i class="bi bi-x-circle-fill me-1"></i> Rejected
                                     </span>
                                 {% endif %}
+                                {% if risk_info[appt.id] %}
+                                    {% set r = risk_info[appt.id] %}
+                                    <span class="badge {% if r.level == 'Low' %}bg-success{% elif r.level == 'Medium' %}bg-warning{% elif r.level == 'High' %}bg-danger{% else %}bg-secondary{% endif %} ms-2" data-bs-toggle="tooltip" title="Risk estimate for scheduling assistance only.">{{ (r.prob * 100) | round }}%</span>
+                                {% endif %}
                             </td>
                             <td class="text-end">
                                 {% if appt.status == 'pending' %}
@@ -118,6 +122,13 @@
                                 {% else %}
                                 <span class="text-muted small">No actions</span>
                                 {% endif %}
+{% if appt.status in ['pending','approved'] %}
+<form action="{{ url_for('doctor.mark_no_show', appointment_id=appt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Mark this appointment as no-show?');">
+    <button type="submit" class="btn btn-outline-danger btn-sm" title="Mark No-Show">
+        <i class="bi bi-exclamation-triangle"></i> No-Show
+    </button>
+</form>
+{% endif %}
                             </td>
                         </tr>
                         {% endfor %}

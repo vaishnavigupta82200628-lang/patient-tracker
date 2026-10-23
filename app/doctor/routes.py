@@ -6,6 +6,14 @@ from app.extensions import db
 from app.models import Doctor, Appointment, Patient, MedicalRecord, Review
 from app.utils import role_required, generate_pdf_report, create_notification, generate_csv
 
+# Import no-show predictor
+from app.ai.noshow_predictor import predict_no_show
+import datetime
+
+# Import no-show predictor
+from app.ai.noshow_predictor import predict_no_show
+import datetime
+
 doctor_bp = Blueprint('doctor', __name__, url_prefix='/doctor')
 
 
@@ -29,6 +37,17 @@ def dashboard():
     avg_rating = round(avg_rating_result, 1) if avg_rating_result else None
     total_reviews = Review.query.filter_by(doctor_id=doctor.id).count()
 
+    # High-risk upcoming appointments (next 7 days)
+    now = datetime.datetime.utcnow()
+    upcoming_limit = now + datetime.timedelta(days=7)
+    high_risk_appointments = []
+    for appt in Appointment.query.filter_by(doctor_id=doctor.id).filter(Appointment.status.in_(['pending', 'approved'])).all():
+        result = predict_no_show(appt)
+        if result:
+            prob, level = result
+            if level == 'High' and now <= appt.date_time <= upcoming_limit:
+                high_risk_appointments.append(appt)
+
     return render_template(
         'doctor/dashboard.html',
         doctor=doctor,
@@ -37,7 +56,9 @@ def dashboard():
         approved_count=approved_count,
         completed_count=completed_count,
         avg_rating=avg_rating,
-        total_reviews=total_reviews
+        total_reviews=total_reviews,
+        high_risk_appointments=high_risk_appointments,
+        predict_no_show=predict_no_show
     )
 
 
@@ -64,7 +85,19 @@ def profile():
 def appointments():
     doctor = get_current_doctor()
     all_appointments = Appointment.query.filter_by(doctor_id=doctor.id).order_by(Appointment.date_time.desc()).all()
-    return render_template('doctor/appointments.html', appointments=all_appointments)
+    # Compute risk info for pending and approved appointments
+    risk_info = {}
+    for appt in all_appointments:
+        if appt.status in ('pending', 'approved'):
+            result = predict_no_show(appt)
+            if result:
+                prob, level = result
+                risk_info[appt.id] = {'prob': prob, 'level': level}
+            else:
+                risk_info[appt.id] = None
+        else:
+            risk_info[appt.id] = None
+    return render_template('doctor/appointments.html', appointments=all_appointments, risk_info=risk_info)
 
 
 @doctor_bp.route('/appointments/update/<int:appointment_id>/<string:new_status>', methods=['POST'])
@@ -96,6 +129,24 @@ def update_appointment_status(appointment_id, new_status):
     flash(f'Appointment marked as {new_status}.', 'success')
     return redirect(url_for('doctor.appointments'))
 
+# Route to mark appointment as no-show
+@doctor_bp.route('/appointments/<int:appointment_id>/no_show', methods=['POST'])
+@login_required
+@role_required('doctor')
+def mark_no_show(appointment_id):
+    doctor = get_current_doctor()
+    appointment = Appointment.query.get_or_404(appointment_id)
+    if appointment.doctor_id != doctor.id:
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('doctor.appointments'))
+    appointment.status = 'no_show'
+    db.session.commit()
+    create_notification(
+        user_id=appointment.patient.user_id,
+        message=f"Your appointment on {appointment.date_time.strftime('%d %b, %I:%M %p')} was marked as a no-show."
+    )
+    flash('Appointment marked as no-show.', 'warning')
+    return redirect(url_for('doctor.appointments'))
 
 @doctor_bp.route('/appointments/<int:appointment_id>/add-record', methods=['GET', 'POST'])
 @login_required
