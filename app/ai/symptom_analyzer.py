@@ -1,99 +1,347 @@
+"""
+Natural Language Symptom Extractor for Patient Tracker.
+Extracts clinical symptoms from conversational patient descriptions using NLTK
+(tokenization, stopword filtering) and maps colloquial expressions / synonyms
+to the exact 132 symptom feature names in our ML training vocabulary.
+"""
+
+import os
+import json
+import re
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
-# ==========================================
-# KNOWN SYMPTOM KEYWORDS DATABASE (150+ symptoms, categorized)
-# ==========================================
+# Ensure necessary NLTK data packages are available
+for pkg in ['punkt', 'punkt_tab', 'stopwords']:
+    try:
+        nltk.data.find(f'tokenizers/{pkg}' if 'punkt' in pkg else f'corpora/{pkg}')
+    except LookupError:
+        try:
+            nltk.download(pkg, quiet=True)
+        except Exception:
+            pass
 
-SYMPTOM_KEYWORDS = [
-    # General
-    'fever', 'high fever', 'mild fever', 'headache', 'severe headache', 'fatigue',
-    'weakness', 'chills', 'sweating', 'night sweats', 'dizziness', 'weight loss',
-    'weight gain', 'loss of appetite', 'increased appetite', 'insomnia', 'anxiety',
-    'restlessness', 'excessive thirst', 'frequent urination', 'malaise', 'lethargy',
-    'drowsiness', 'confusion', 'dehydration', 'pale skin', 'cold sweats', 'hot flashes',
-    'hunger pangs', 'excessive hunger', 'numbness', 'tingling sensation', 'muscle weakness',
-    'swollen glands', 'swollen lymph nodes', 'sensitivity to cold', 'sensitivity to heat',
+# Load master 132-symptom vocabulary from trained model artifacts
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+VOCAB_PATH = os.path.join(CURRENT_DIR, 'model', 'symptom_vocab.json')
 
-    # Respiratory
-    'cough', 'dry cough', 'wet cough', 'cold', 'sore throat', 'runny nose', 'blocked nose',
-    'nasal congestion', 'sneezing', 'shortness of breath', 'difficulty breathing', 'wheezing',
-    'chest pain', 'chest tightness', 'congestion', 'hoarseness', 'difficulty swallowing',
+if os.path.exists(VOCAB_PATH):
+    with open(VOCAB_PATH, 'r', encoding='utf-8') as f:
+        DATASET_SYMPTOMS = json.load(f)
+else:
+    DATASET_SYMPTOMS = []
 
-    # Digestive
-    'nausea', 'vomiting', 'diarrhea', 'constipation', 'stomach pain', 'abdominal pain',
-    'bloating', 'acidity', 'indigestion', 'heartburn', 'loss of taste', 'loss of smell',
-    'blood in stool', 'gas', 'cramps', 'stomach cramps', 'upset stomach', 'dry mouth',
-    'excessive salivation', 'mouth ulcers', 'bad breath',
+# Comprehensive synonym dictionary mapping colloquial phrases to exact dataset features
+SYNONYM_MAP = {
+    # Fevers
+    'fever': 'high_fever',
+    'high fever': 'high_fever',
+    'feverish': 'high_fever',
+    'high temperature': 'high_fever',
+    'mild fever': 'mild_fever',
+    'low fever': 'mild_fever',
+    'slight fever': 'mild_fever',
 
-    # Pain
-    'body pain', 'joint pain', 'muscle pain', 'back pain', 'neck pain', 'ear pain',
-    'eye pain', 'toothache', 'stiffness', 'leg pain', 'shoulder pain', 'knee pain',
+    # Pains & Aches
+    'headache': 'headache',
+    'head ache': 'headache',
+    'severe headache': 'headache',
+    'throbbing headache': 'headache',
+    'migraine': 'headache',
+    'body pain': 'muscle_pain',
+    'body ache': 'muscle_pain',
+    'body aches': 'muscle_pain',
+    'aching body': 'muscle_pain',
+    'muscle pain': 'muscle_pain',
+    'muscle ache': 'muscle_pain',
+    'muscle aches': 'muscle_pain',
+    'joint pain': 'joint_pain',
+    'joints pain': 'joint_pain',
+    'joint ache': 'joint_pain',
+    'knee pain': 'knee_pain',
+    'hip pain': 'hip_joint_pain',
+    'hip joint pain': 'hip_joint_pain',
+    'back pain': 'back_pain',
+    'backache': 'back_pain',
+    'lower back pain': 'back_pain',
+    'neck pain': 'neck_pain',
+    'stiff neck': 'stiff_neck',
+    'chest pain': 'chest_pain',
+    'chest tightness': 'chest_pain',
+    'chest pressure': 'chest_pain',
+    'eye pain': 'pain_behind_the_eyes',
+    'pain behind the eyes': 'pain_behind_the_eyes',
+    'pain behind eyes': 'pain_behind_the_eyes',
+    'pain in anal region': 'pain_in_anal_region',
+    'pain during bowel movements': 'pain_during_bowel_movements',
 
-    # Skin
-    'acne', 'pimples', 'oily skin', 'dry skin', 'blackheads', 'whiteheads', 'rash',
-    'itching', 'swelling', 'redness', 'dark spots', 'skin irritation', 'acne marks',
-    'scars', 'inflammation', 'dandruff', 'hair loss', 'hives', 'dry patches',
-    'flaky skin', 'jaundice', 'dark circles',
+    # Digestive & Abdominal
+    'stomach pain': 'stomach_pain',
+    'stomach ache': 'stomach_pain',
+    'tummy ache': 'stomach_pain',
+    'belly pain': 'belly_pain',
+    'abdominal pain': 'abdominal_pain',
+    'stomach cramps': 'stomach_pain',
+    'acidity': 'acidity',
+    'heartburn': 'acidity',
+    'acid reflux': 'acidity',
+    'indigestion': 'indigestion',
+    'upset stomach': 'indigestion',
+    'vomiting': 'vomiting',
+    'throwing up': 'vomiting',
+    'puking': 'vomiting',
+    'nausea': 'nausea',
+    'feeling sick': 'nausea',
+    'queasy': 'nausea',
+    'diarrhea': 'diarrhoea',
+    'diarrhoea': 'diarrhoea',
+    'loose motions': 'diarrhoea',
+    'loose motion': 'diarrhoea',
+    'watery stool': 'diarrhoea',
+    'constipation': 'constipation',
+    'passage of gases': 'passage_of_gases',
+    'gas': 'passage_of_gases',
+    'flatulence': 'passage_of_gases',
+    'stomach bleeding': 'stomach_bleeding',
+    'distention of abdomen': 'distention_of_abdomen',
+    'bloating': 'distention_of_abdomen',
+    'swelling of stomach': 'swelling_of_stomach',
 
-    # Eyes
-    'blurred vision', 'sore eyes', 'red eyes', 'watery eyes', 'itchy eyes',
-    'eye discharge', 'sensitivity to light', 'dry eyes',
+    # Respiratory & Cold
+    'cough': 'cough',
+    'coughing': 'cough',
+    'dry cough': 'cough',
+    'wet cough': 'cough',
+    'runny nose': 'runny_nose',
+    'running nose': 'runny_nose',
+    'blocked nose': 'congestion',
+    'congestion': 'congestion',
+    'nasal congestion': 'congestion',
+    'cold': 'continuous_sneezing',
+    'sneezing': 'continuous_sneezing',
+    'continuous sneezing': 'continuous_sneezing',
+    'shortness of breath': 'breathlessness',
+    'breathlessness': 'breathlessness',
+    'difficulty breathing': 'breathlessness',
+    'hard to breathe': 'breathlessness',
+    'phlegm': 'phlegm',
+    'mucus': 'phlegm',
+    'throat irritation': 'throat_irritation',
+    'sore throat': 'throat_irritation',
+    'itchy throat': 'throat_irritation',
+    'sinus pressure': 'sinus_pressure',
+    'sinus pain': 'sinus_pressure',
+    'blood in sputum': 'blood_in_sputum',
+    'rusty sputum': 'rusty_sputum',
+    'mucoid sputum': 'mucoid_sputum',
 
-    # Urinary
-    'burning urination', 'painful urination', 'cloudy urine', 'pelvic pain',
-    'lower abdominal pain', 'dark urine',
+    # Systemic & General
+    'fatigue': 'fatigue',
+    'tiredness': 'fatigue',
+    'exhaustion': 'fatigue',
+    'lethargy': 'lethargy',
+    'weakness': 'fatigue',
+    'weakness in limbs': 'weakness_in_limbs',
+    'muscle weakness': 'muscle_weakness',
+    'chills': 'chills',
+    'shivering': 'shivering',
+    'shivers': 'shivering',
+    'sweating': 'sweating',
+    'profuse sweating': 'sweating',
+    'night sweats': 'sweating',
+    'dehydration': 'dehydration',
+    'loss of appetite': 'loss_of_appetite',
+    'poor appetite': 'loss_of_appetite',
+    'reduced appetite': 'loss_of_appetite',
+    'increased appetite': 'increased_appetite',
+    'excessive hunger': 'excessive_hunger',
+    'weight loss': 'weight_loss',
+    'losing weight': 'weight_loss',
+    'weight gain': 'weight_gain',
+    'gaining weight': 'weight_gain',
+    'dizziness': 'dizziness',
+    'dizzy': 'dizziness',
+    'giddy': 'dizziness',
+    'loss of balance': 'loss_of_balance',
+    'unsteadiness': 'unsteadiness',
+    'spinning movements': 'spinning_movements',
+    'vertigo': 'spinning_movements',
+    'fast heart rate': 'fast_heart_rate',
+    'palpitations': 'palpitations',
+    'irregular heartbeat': 'palpitations',
+    'restlessness': 'restlessness',
+    'anxiety': 'anxiety',
+    'depression': 'depression',
+    'mood swings': 'mood_swings',
+    'irritability': 'irritability',
+    'malaise': 'malaise',
 
-    # Cardiac / Circulatory
-    'palpitations', 'high blood pressure', 'low blood pressure', 'irregular heartbeat',
-    'fainting', 'cold hands', 'cold feet',
+    # Dermatological / Skin
+    'itching': 'itching',
+    'itchy': 'itching',
+    'itchiness': 'itching',
+    'skin rash': 'skin_rash',
+    'rash': 'skin_rash',
+    'rashes': 'skin_rash',
+    'red spots': 'red_spots_over_body',
+    'red spots over body': 'red_spots_over_body',
+    'nodal skin eruptions': 'nodal_skin_eruptions',
+    'skin eruptions': 'nodal_skin_eruptions',
+    'acne': 'pus_filled_pimples',
+    'pimples': 'pus_filled_pimples',
+    'pus filled pimples': 'pus_filled_pimples',
+    'blackheads': 'blackheads',
+    'blister': 'blister',
+    'blisters': 'blister',
+    'skin peeling': 'skin_peeling',
+    'scabs': 'yellow_crust_ooze',
+    'yellow crust ooze': 'yellow_crust_ooze',
+    'red sore around nose': 'red_sore_around_nose',
+    'yellowish skin': 'yellowish_skin',
+    'yellow skin': 'yellowish_skin',
+    'jaundice': 'yellowish_skin',
+    'bruising': 'bruising',
+    'bruises': 'bruising',
 
-    # Mental / Sleep
-    'mood swings', 'difficulty concentrating', 'irritability', 'nervousness', 'panic',
-    'trouble sleeping', 'nightmares', 'excessive worry',
+    # Urinary & Renal
+    'burning urination': 'burning_micturition',
+    'burning micturition': 'burning_micturition',
+    'painful urination': 'burning_micturition',
+    'burning while peeing': 'burning_micturition',
+    'dark urine': 'dark_urine',
+    'yellow urine': 'yellow_urine',
+    'frequent urination': 'polyuria',
+    'polyuria': 'polyuria',
+    'continuous feel of urine': 'continuous_feel_of_urine',
+    'bladder discomfort': 'bladder_discomfort',
+    'foul smell of urine': 'foul_smell_of urine',
+    'spotting urination': 'spotting_ urination',
 
-    # Ear / Nose / Throat
-    'hearing loss', 'ringing in ears', 'nose bleed',
+    # Eyes & Vision
+    'yellowing of eyes': 'yellowing_of_eyes',
+    'yellow eyes': 'yellowing_of_eyes',
+    'redness of eyes': 'redness_of_eyes',
+    'red eyes': 'redness_of_eyes',
+    'sunken eyes': 'sunken_eyes',
+    'watering from eyes': 'watering_from_eyes',
+    'watery eyes': 'watering_from_eyes',
+    'blurred and distorted vision': 'blurred_and_distorted_vision',
+    'blurred vision': 'blurred_and_distorted_vision',
+    'blurry vision': 'blurred_and_distorted_vision',
+    'visual disturbances': 'visual_disturbances',
 
-    # Infection-related patterns
-    'red spots on skin', 'bleeding gums', 'yellowing of skin',
-]
+    # Mouth & ENT
+    'loss of smell': 'loss_of_smell',
+    'cannot smell': 'loss_of_smell',
+    'ulcers on tongue': 'ulcers_on_tongue',
+    'mouth ulcers': 'ulcers_on_tongue',
+    'patches in throat': 'patches_in_throat',
+    'slurred speech': 'slurred_speech'
+}
 
-# Separate single-word and multi-word symptoms for different matching strategies
-MULTI_WORD_SYMPTOMS = [s for s in SYMPTOM_KEYWORDS if ' ' in s]
-SINGLE_WORD_SYMPTOMS = [s for s in SYMPTOM_KEYWORDS if ' ' not in s]
+# Auto-register literal dataset symptom names and their spaced equivalents into synonym map
+for symptom in DATASET_SYMPTOMS:
+    cleaned_phrase = symptom.replace('_', ' ').strip().lower()
+    if cleaned_phrase not in SYNONYM_MAP:
+        SYNONYM_MAP[cleaned_phrase] = symptom
+    if symptom.lower() not in SYNONYM_MAP:
+        SYNONYM_MAP[symptom.lower()] = symptom
+
+# Sort multi-word phrases by descending length for greedy matching
+MULTI_WORD_PHRASES = sorted(
+    [k for k in SYNONYM_MAP.keys() if ' ' in k],
+    key=lambda s: len(s),
+    reverse=True
+)
 
 
 def extract_symptoms(text):
     """
-    Takes raw patient text input and returns a list of matched symptoms.
-    Uses NLTK for tokenization and stopword removal.
+    Takes conversational patient text and extracts canonical symptom keys matching
+    the ML model's 132 features.
+    
+    Steps:
+    1. Multi-word phrase matching against synonyms and clinical features.
+    2. NLTK tokenization and stopword removal.
+    3. Single-word token matching.
+    4. Validation against master 132-symptom vocabulary.
     """
-    if not text or not text.strip():
+    if not text or not str(text).strip():
         return []
 
-    text_lower = text.lower()
+    text_lower = str(text).lower()
+    # Normalize punctuation into whitespace for smooth matching
+    normalized_text = re.sub(r'[,.;:!?/()]+', ' ', text_lower)
+    normalized_text = f" {normalized_text} "
+
     found_symptoms = set()
 
-    # Step 1: Check for multi-word symptoms first (phrase-level match on raw text)
-    for phrase in MULTI_WORD_SYMPTOMS:
-        if phrase in text_lower:
-            found_symptoms.add(phrase)
+    # Step 1: Greedy multi-word phrase matching
+    for phrase in MULTI_WORD_PHRASES:
+        pattern = r'(?:\b)' + re.escape(phrase) + r'(?:\b)'
+        if re.search(pattern, normalized_text):
+            canonical = SYNONYM_MAP[phrase]
+            found_symptoms.add(canonical)
+            # Replace matched phrase to avoid redundant sub-token matches
+            normalized_text = re.sub(pattern, ' ', normalized_text)
 
-    # Step 2: Tokenize the text into individual words
-    tokens = word_tokenize(text_lower)
+    # Step 2: NLTK tokenization
+    try:
+        tokens = word_tokenize(normalized_text)
+    except Exception:
+        tokens = normalized_text.split()
 
-    # Step 3: Remove stopwords and punctuation
-    stop_words = set(stopwords.words('english'))
-    filtered_tokens = [
-        word for word in tokens
-        if word.isalpha() and word not in stop_words
-    ]
+    # Step 3: Remove stopwords and non-alphabetical tokens
+    try:
+        stop_words = set(stopwords.words('english'))
+    except Exception:
+        stop_words = {'i', 'me', 'my', 'myself', 'we', 'our', 'you', 'he', 'she', 'it', 'they', 'a', 'an', 'the', 'and', 'or', 'is', 'was', 'am', 'are', 'in', 'on', 'with', 'from', 'at', 'have', 'had', 'has', 'feel', 'feeling', 'since', 'yesterday', 'today'}
 
-    # Step 4: Check single-word tokens against our single-word symptom list
+    filtered_tokens = [w for w in tokens if w.isalpha() and w not in stop_words]
+
+    # Step 4: Single-word lookup in synonym map
     for word in filtered_tokens:
-        if word in SINGLE_WORD_SYMPTOMS:
-            found_symptoms.add(word)
+        if word in SYNONYM_MAP:
+            found_symptoms.add(SYNONYM_MAP[word])
 
-    return sorted(list(found_symptoms))
+    # Filter to only valid dataset symptoms if vocabulary is loaded
+    if DATASET_SYMPTOMS:
+        final_symptoms = [s for s in found_symptoms if s in DATASET_SYMPTOMS]
+    else:
+        final_symptoms = list(found_symptoms)
+
+    return sorted(list(set(final_symptoms)))
+
+
+def format_symptom_display_name(symptom_code):
+    """
+    Formats a raw dataset symptom column (e.g., 'high_fever', 'burning_micturition')
+    into a patient-friendly readable title (e.g., 'High Fever', 'Burning Urination').
+    """
+    if not symptom_code:
+        return ""
+    
+    # Specific clinical replacements for better patient readability
+    custom_labels = {
+        'burning_micturition': 'Burning Urination',
+        'continuous_sneezing': 'Continuous Sneezing',
+        'spotting_ urination': 'Spotting Urination',
+        'foul_smell_of urine': 'Foul Smelling Urine',
+        'continuous_feel_of_urine': 'Frequent Urge to Urinate',
+        'polyuria': 'Frequent Urination',
+        'distention_of_abdomen': 'Abdominal Bloating',
+        'swelled_lymph_nodes': 'Swollen Lymph Nodes',
+        'pain_behind_the_eyes': 'Pain Behind the Eyes',
+        'passage_of_gases': 'Gas / Flatulence',
+        'toxic_look_(typhos)': 'High Toxic Fever Appearance',
+        'dischromic _patches': 'Discolored Skin Patches',
+        'fluid_overload.1': 'Fluid Retention'
+    }
+
+    if symptom_code in custom_labels:
+        return custom_labels[symptom_code]
+
+    # Default: replace underscores, clean spaces, title-case
+    clean = symptom_code.replace('_', ' ').strip()
+    return clean.title()

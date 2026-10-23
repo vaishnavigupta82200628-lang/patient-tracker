@@ -1,0 +1,94 @@
+{
+    "best_model": "Logistic Regression",
+    "symptoms_count": 132,
+    "diseases_count": 41,
+    "clean_samples_count": 305,
+    "robustness_drop_rate": "20% to 40% active symptoms dropped, 1-2 random symptoms added",
+    "limitation_statement": "The disease dataset is synthetic and demonstrates high baseline accuracy (~100%) on clean data. However, real clinical patient presentations feature missing symptoms, subjective reporting, and comorbidity. Under simulated noisy conditions, model accuracy adjusts (best: 96.7%), confirming that predictions are decision-support estimates rather than definitive medical diagnoses.",
+    "models": {
+        "Naive Bayes": {
+            "cv_accuracy_mean": 0.9738,
+            "cv_accuracy_std": 0.008,
+            "cv_f1_macro_mean": 0.959,
+            "cv_precision_macro_mean": 0.9569,
+            "cv_recall_macro_mean": 0.9659,
+            "test_accuracy": 0.9672,
+            "test_precision_macro": 0.9593,
+            "test_recall_macro": 0.9634,
+            "test_f1_macro": 0.9577,
+            "noisy_test_accuracy": 0.9016
+        },
+        "Logistic Regression": {
+            "cv_accuracy_mean": 1.0,
+            "cv_accuracy_std": 0.0,
+            "cv_f1_macro_mean": 1.0,
+            "cv_precision_macro_mean": 1.0,
+            "cv_recall_macro_mean": 1.0,
+            "test_accuracy": 1.0,
+            "test_precision_macro": 1.0,
+            "test_recall_macro": 1.0,
+            "test_f1_macro": 1.0,
+            "noisy_test_accuracy": 0.9672
+        },
+        "Decision Tree": {
+            "cv_accuracy_mean": 0.6066,
+            "cv_accuracy_std": 0.0486,
+            "cv_f1_macro_mean": 0.5188,
+            "cv_precision_macro_mean": 0.5529,
+            "cv_recall_macro_mean": 0.5341,
+            "test_accuracy": 0.5738,
+            "test_precision_macro": 0.4695,
+            "test_recall_macro": 0.4878,
+            "test_f1_macro": 0.455,
+            "noisy_test_accuracy": 0.377
+        },
+        "Random Forest": {
+            "cv_accuracy_mean": 1.0,
+            "cv_accuracy_std": 0.0,
+            "cv_f1_macro_mean": 1.0,
+            "cv_precision_macro_mean": 1.0,
+            "cv_recall_macro_mean": 1.0,
+            "test_accuracy": 0.9836,
+            "test_precision_macro": 0.9919,
+            "test_recall_macro": 0.9878,
+            "test_f1_macro": 0.987,
+            "noisy_test_accuracy": 0.9016
+        },
+        "SVM": {
+            "cv_accuracy_mean": 1.0,
+            "cv_accuracy_std": 0.0,
+            "cv_f1_macro_mean": 1.0,
+            "cv_precision_macro_mean": 1.0,
+            "cv_recall_macro_mean": 1.0,
+            "test_accuracy": 1.0,
+            "test_precision_macro": 1.0,
+            "test_recall_macro": 1.0,
+            "test_f1_macro": 1.0,
+            "noisy_test_accuracy": 0.918
+        },
+        "KNN": {
+            "cv_accuracy_mean": 1.0,
+            "cv_accuracy_std": 0.0,
+            "cv_f1_macro_mean": 1.0,
+            "cv_precision_macro_mean": 1.0,
+            "cv_recall_macro_mean": 1.0,
+            "test_accuracy": 1.0,
+            "test_precision_macro": 1.0,
+            "test_recall_macro": 1.0,
+            "test_f1_macro": 1.0,
+            "noisy_test_accuracy": 0.918
+        },
+        "XGBoost": {
+            "cv_accuracy_mean": 0.8984,
+            "cv_accuracy_std": 0.0318,
+            "cv_f1_macro_mean": 0.8616,
+            "cv_precision_macro_mean": 0.8659,
+            "cv_recall_macro_mean": 0.8878,
+            "test_accuracy": 0.8361,
+            "test_precision_macro": 0.7683,
+            "test_recall_macro": 0.8049,
+            "test_f1_macro": 0.7634,
+            "noisy_test_accuracy": 0.5902
+        }
+    }
+}

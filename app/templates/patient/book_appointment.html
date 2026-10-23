@@ -35,7 +35,7 @@
                                 <select id="specializationSelect" class="form-select" required>
                                     <option value="">Choose Specialization (e.g. Cardiologist, Dermatologist)</option>
                                     {% for spec in specializations %}
-                                    <option value="{{ spec }}">{{ spec }}</option>
+                                    <option value="{{ spec }}" {% if selected_specialization and (selected_specialization|lower in spec|lower or spec|lower in selected_specialization|lower) %}selected{% endif %}>{{ spec }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -132,6 +132,11 @@
             console.error('Error fetching doctors:', error);
         }
     });
+
+    // Auto-trigger if specialization was pre-selected via query param
+    if (specializationSelect.value) {
+        specializationSelect.dispatchEvent(new Event('change'));
+    }
 
     // ---- Live search/filter for doctor dropdown ----
     searchBox.addEventListener('input', function () {

@@ -1,0 +1,7 @@
+{
+  "best_model": "Logistic Regression",
+  "symptom_count": 132,
+  "disease_count": 41,
+  "cv_mean": 1.0,
+  "noisy_accuracy": 0.9672
+}

@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}AI Symptom Analysis Results — Patient Tracker{% endblock %}
+{% block title %}AI Symptom Analysis & Clinical Differential Diagnosis — Patient Tracker{% endblock %}
 
 {% block content %}
 <div class="container py-4">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-primary">Analysis Output</span>
-                <span class="text-muted small">&bull; AI Clinical Evaluation</span>
+                <span class="badge bg-primary">Clinical Intelligence</span>
+                <span class="text-muted small">&bull; Multi-Model Inference & Explainability</span>
             </div>
             <h2 class="fw-bold mb-0 mt-1"><i class="bi bi-robot text-primary me-2"></i>Symptom Analysis Results</h2>
         </div>
@@ -23,106 +23,229 @@
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <!-- Patient Description Card -->
             <div class="card mb-4 shadow-sm border-0">
                 <div class="card-header bg-surface-subtle d-flex align-items-center gap-2">
-                    <i class="bi bi-chat-quote-fill text-muted"></i>
+                    <i class="bi bi-chat-quote-fill text-primary"></i>
                     <span class="fw-semibold">Your Reported Symptoms</span>
                 </div>
                 <div class="card-body">
-                    <p class="mb-0 text-secondary fst-italic">"{{ symptoms_text }}"</p>
+                    <p class="mb-0 text-secondary fst-italic fs-6">"{{ symptoms_text }}"</p>
                 </div>
             </div>
 
             {% if extracted_symptoms %}
             <!-- Extracted Symptom Chips -->
             <div class="card mb-4 shadow-sm border-0">
-                <div class="card-header bg-surface-subtle d-flex align-items-center gap-2">
-                    <i class="bi bi-tags-fill text-primary"></i>
-                    <span class="fw-semibold">Clinically Identified Symptoms ({{ extracted_symptoms|length }})</span>
+                <div class="card-header bg-surface-subtle d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-tags-fill text-primary"></i>
+                        <span class="fw-semibold">Clinically Identified Symptoms ({{ extracted_symptoms|length }})</span>
+                    </div>
+                    <span class="small text-muted">Mapped to ML training vocabulary</span>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2">
-                        {% for symptom in extracted_symptoms %}
-                            <span class="badge bg-primary-soft p-2 fs-6">
-                                <i class="bi bi-check2-circle text-primary me-1"></i>{{ symptom }}
-                            </span>
-                        {% endfor %}
+                        {% if formatted_symptoms %}
+                            {% for sym in formatted_symptoms %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle p-2 fs-6">
+                                    <i class="bi bi-check2-circle text-primary me-1"></i>{{ sym.name }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            {% for symptom in extracted_symptoms %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle p-2 fs-6">
+                                    <i class="bi bi-check2-circle text-primary me-1"></i>{{ symptom }}
+                                </span>
+                            {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            {% if predicted_disease %}
-            <!-- AI Prediction Highlight Card -->
-            <div class="card mb-4 shadow-sm border-0 prediction-result-card">
+            <!-- TOP-3 DIFFERENTIAL DIAGNOSES SECTION -->
+            <div class="mb-4">
                 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-diagram-3-fill text-primary me-2"></i>Differential Diagnosis (Top 3 Candidates)
+                        </h4>
+                        <small class="text-muted">Ranked by calibrated probabilistic confidence across 41 conditions</small>
+                    </div>
+                    {% if top_predictions %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                        <i class="bi bi-check-all me-1"></i>3 Candidates Evaluated
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="row g-3">
+                    {% if top_predictions %}
+                        {% for pred in top_predictions %}
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm border-0 {% if pred.rank == 1 %}border-primary border-2{% endif %}" style="transition: transform 0.2s, box-shadow 0.2s;">
+                                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            {% if pred.rank == 1 %}
+                                                <span class="badge bg-primary text-white">#1 Primary Match</span>
+                                            {% elif pred.rank == 2 %}
+                                                <span class="badge bg-info-subtle text-info border border-info-subtle">#2 Differential</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">#3 Consideration</span>
+                                            {% endif %}
+                                            <span class="fw-bold {% if pred.rank == 1 %}text-primary{% else %}text-muted{% endif %} fs-6">{{ pred.confidence }}%</span>
+                                        </div>
+
+                                        <h5 class="fw-bold mb-2 {% if pred.rank == 1 %}text-primary{% else %}text-dark{% endif %}">
+                                            {{ pred.disease }}
+                                        </h5>
+
+                                        <!-- Confidence Progress Bar -->
+                                        <div class="progress mb-3" style="height: 8px; background-color: var(--border-subtle, #edf2f7);">
+                                            <div class="progress-bar {% if pred.rank == 1 %}bg-primary{% elif pred.rank == 2 %}bg-info{% else %}bg-secondary{% endif %}"
+                                                 role="progressbar"
+                                                 style="width: {{ pred.confidence }}%;"
+                                                 aria-valuenow="{{ pred.confidence }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+
+                                        <p class="small text-secondary mb-3" style="line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                            {{ pred.description }}
+                                        </p>
+                                    </div>
+
+                                    <div class="pt-2 border-top">
+                                        <div class="small text-muted mb-2 d-flex align-items-center gap-1">
+                                            <i class="bi bi-hospital text-primary"></i>
+                                            <span>Specialist: <strong>{{ pred.specialization }}</strong></span>
+                                        </div>
+                                        <a href="{{ url_for('patient.book_appointment', specialization=pred.specialization) }}"
+                                           class="btn {% if pred.rank == 1 %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm w-100">
+                                            <i class="bi bi-calendar-plus me-1"></i> Book {{ pred.specialization }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Fallback single card if top_predictions list is empty -->
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0 border-primary border-2 p-3">
+                                <h4 class="fw-bold text-primary">{{ predicted_disease }}</h4>
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ confidence }}%;"></div>
+                                </div>
+                                <p class="text-secondary small mb-0">{{ disease_description }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- EXPLAINABILITY SECTION ("WHY THIS PREDICTION?") -->
+            {% if explainability %}
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-surface-subtle d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="stat-icon primary p-0" style="width: 44px; height: 44px; font-size: 1.3rem;">
-                            <i class="bi bi-activity"></i>
-                        </div>
-                        <div>
-                            <span class="small text-muted text-uppercase fw-semibold">Top AI Prediction</span>
-                            <h3 class="fw-bold mb-0 text-primary">{{ predicted_disease }}</h3>
-                        </div>
+                        <i class="bi bi-bar-chart-steps text-primary"></i>
+                        <h5 class="fw-bold mb-0">Why This Prediction? (Clinical Feature Contribution)</h5>
                     </div>
-                    <span class="badge bg-primary fs-6">{{ confidence }}% Confidence Score</span>
+                    <span class="badge bg-secondary-subtle text-secondary small">SHAP / Feature Attribution</span>
                 </div>
-
-                <!-- Animated Confidence Bar -->
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between small text-muted mb-1">
-                        <span>Prediction Confidence Level</span>
-                        <span class="fw-bold text-dark">{{ confidence }}%</span>
-                    </div>
-                    <div class="confidence-progress-bar">
-                        <div class="confidence-progress-fill" style="width: {{ confidence }}%;"></div>
-                    </div>
-                </div>
-
-                <!-- Disease Description Info Box -->
-                <div class="p-3 rounded-3 bg-surface-subtle border">
-                    <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-info-circle-fill text-primary me-1"></i>Condition Information:</h6>
-                    <p class="mb-0 text-secondary small" style="line-height: 1.6;">
-                        {{ disease_description }}
+                <div class="card-body p-4">
+                    <p class="text-secondary small mb-4">
+                        Our Explainable AI (XAI) engine quantified how significantly each of your reported symptoms drove the diagnosis towards <strong>{{ predicted_disease }}</strong>.
                     </p>
-                </div>
 
-                <!-- Recommended Next Steps -->
-                <div class="mt-4 pt-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
-                    <div class="small text-muted">
-                        <i class="bi bi-shield-check text-success me-1"></i> Recommended: Consult a physician for confirmation.
+                    <div class="explainability-chart-container">
+                        {% for item in explainability %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fw-semibold text-dark">{{ item.name }}</span>
+                                    <span class="badge bg-{{ item.impact_badge }}-subtle text-{{ item.impact_badge }} border border-{{ item.impact_badge }}-subtle" style="font-size: 0.7rem;">
+                                        {{ item.impact }}
+                                    </span>
+                                </div>
+                                <span class="small fw-bold text-dark">{{ item.percentage }}% impact</span>
+                            </div>
+                            <!-- Horizontal Bar -->
+                            <div class="progress" style="height: 12px; border-radius: 9999px; background-color: var(--border-subtle, #edf2f7);">
+                                <div class="progress-bar bg-{{ item.impact_badge }}"
+                                     role="progressbar"
+                                     style="width: {{ item.percentage }}%; border-radius: 9999px; transition: width 0.6s ease;"
+                                     aria-valuenow="{{ item.percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-calendar-plus me-1"></i> Book Doctor Consultation
-                    </a>
+
+                    <div class="mt-3 p-3 rounded-3 bg-surface-subtle border small text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0"></i>
+                        <div>
+                            Features with higher percentages had the greatest positive correlation with the confirmed clinical presentation of <strong>{{ predicted_disease }}</strong>.
+                        </div>
+                    </div>
                 </div>
             </div>
             {% endif %}
 
-            <!-- Medical Disclaimer -->
-            <div class="alert alert-warning d-flex align-items-center gap-3 shadow-sm border-0 mb-4">
-                <i class="bi bi-exclamation-triangle-fill fs-3 text-warning flex-shrink-0"></i>
-                <div class="small">
-                    <strong>Important Medical Notice:</strong> This preliminary AI insight is generated for informational and decision-support purposes only. It is not an official medical diagnosis. Please consult a licensed medical professional for an accurate diagnosis and personalized prescription plan.
+            <!-- PRIMARY RECOMMENDATION & SPECIALIST CONSULTATION CALL TO ACTION -->
+            <div class="card mb-4 shadow-sm border-0 border-start border-primary border-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon primary p-0" style="width: 48px; height: 48px; font-size: 1.5rem; flex-shrink: 0;">
+                                <i class="bi bi-hospital"></i>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary mb-1">Recommended Action</span>
+                                <h5 class="fw-bold mb-1 text-dark">Consult a {{ recommended_specialization }}</h5>
+                                <p class="text-secondary small mb-0">
+                                    Our AI suggests booking an appointment with a specialist in <strong>{{ recommended_specialization }}</strong> for clinical validation.
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('patient.book_appointment', specialization=recommended_specialization) }}"
+                           class="btn btn-primary px-4 py-2 fw-semibold">
+                            <i class="bi bi-calendar-check me-2"></i>Book Doctor Consultation ({{ recommended_specialization }})
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MANDATORY MEDICAL DISCLAIMER -->
+            <div class="alert alert-warning d-flex align-items-start gap-3 shadow-sm border-0 mb-4 p-3 rounded-3">
+                <i class="bi bi-shield-exclamation fs-3 text-warning flex-shrink-0 mt-1"></i>
+                <div class="small text-dark">
+                    <strong class="d-block mb-1 text-uppercase" style="letter-spacing: 0.5px;">
+                        <i class="bi bi-info-circle me-1"></i> Medical Disclaimer: {{ disclaimer or "AI assistance only, not a medical diagnosis" }}
+                    </strong>
+                    The insights provided by this system are powered by clinical machine learning and natural language processing. They are intended for triage prioritization, informational reference, and clinical decision support only. They do not constitute an official medical diagnosis, treatment plan, or doctor-patient relationship. Always consult a board-certified physician or seek emergency medical care if you experience severe symptoms like chest tightness, unconsciousness, or acute breathing difficulty.
                 </div>
             </div>
 
             {% else %}
             <!-- No Symptoms Extracted State -->
-            <div class="empty-state mb-4">
-                <div class="empty-state-icon">
+            <div class="empty-state mb-4 text-center p-5 card shadow-sm border-0">
+                <div class="empty-state-icon mb-3" style="font-size: 3rem; color: var(--primary);">
                     <i class="bi bi-search"></i>
                 </div>
-                <h4 class="empty-state-title">No Medical Symptoms Identified</h4>
-                <p class="empty-state-desc">We could not match specific clinical symptoms from your description. Try describing your condition using specific terms like "fever", "cough", "headache", or "nausea".</p>
-                <a href="{{ url_for('patient.symptom_checker') }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-arrow-repeat me-1"></i> Try Again with Specific Symptoms
-                </a>
+                <h4 class="empty-state-title fw-bold">No Medical Symptoms Identified</h4>
+                <p class="empty-state-desc text-muted mx-auto" style="max-width: 500px;">
+                    We could not match recognizable clinical symptoms from your description. Try describing your symptoms using common terms like "fever", "cough", "headache", "stomach pain", or "body aches".
+                </p>
+                <div class="mt-3">
+                    <a href="{{ url_for('patient.symptom_checker') }}" class="btn btn-primary btn-sm px-4">
+                        <i class="bi bi-arrow-repeat me-1"></i> Try Again with Specific Symptoms
+                    </a>
+                </div>
             </div>
             {% endif %}
 
-            <div class="text-center">
+            <div class="text-center mt-3">
                 <a href="{{ url_for('patient.symptom_checker') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Analyze Another Description
                 </a>

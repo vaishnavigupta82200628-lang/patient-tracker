@@ -1553,3 +1553,27 @@ a:hover {
         padding: 2.5rem 1.5rem;
     }
 }
+
+/* ==========================================================================
+   Feature 1: AI Explainability & Differential Diagnosis Enhancements
+   ========================================================================== */
+.explainability-chart-container {
+    background: var(--bg-surface-subtle);
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.explainability-chart-container .progress {
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+}
+
+[data-theme="dark"] .explainability-chart-container {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .card.border-primary {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}

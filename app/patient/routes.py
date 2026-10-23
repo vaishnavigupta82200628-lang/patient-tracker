@@ -5,10 +5,9 @@ from datetime import datetime
 from app.extensions import db
 from app.models import Patient, Doctor, Appointment, MedicalRecord, SymptomLog, Review, RadiologyAppointment
 from app.utils import role_required, generate_pdf_report, create_notification
-from app.ai.symptom_analyzer import extract_symptoms
+from app.ai.symptom_analyzer import extract_symptoms, format_symptom_display_name
 from app.ai.disease_predictor import predict_disease
-from app.ai.disease_info import DISEASE_INFO
-from app.models import Patient, Doctor, Appointment, MedicalRecord, SymptomLog, Review
+from app.ai.disease_info import DISEASE_INFO, get_disease_description, get_recommended_specialization
 
 patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
 
@@ -85,6 +84,7 @@ def book_appointment():
         .filter(Doctor.specialization != '')\
         .distinct().all()
     specializations = [s[0] for s in specializations]  # unpack from list of tuples
+    selected_specialization = request.args.get('specialization', '').strip()
 
     if request.method == 'POST':
         doctor_id = request.form.get('doctor_id')
@@ -93,7 +93,7 @@ def book_appointment():
 
         if not doctor_id or not date_str:
             flash('Please select a doctor and date/time.', 'danger')
-            return render_template('patient/book_appointment.html', specializations=specializations)
+            return render_template('patient/book_appointment.html', specializations=specializations, selected_specialization=selected_specialization)
 
         # Convert the string from the HTML datetime-local input into a Python datetime object
         appointment_datetime = datetime.strptime(date_str, '%Y-%m-%dT%H:%M')
@@ -101,7 +101,7 @@ def book_appointment():
         # Validation: appointment must be in the future
         if appointment_datetime < datetime.now():
             flash('You cannot book an appointment in the past. Please select a future date and time.', 'danger')
-            return render_template('patient/book_appointment.html', specializations=specializations)
+            return render_template('patient/book_appointment.html', specializations=specializations, selected_specialization=selected_specialization)
 
         new_appointment = Appointment(
             patient_id=patient.id,
@@ -123,7 +123,7 @@ def book_appointment():
         flash('Appointment request submitted! Waiting for doctor approval.', 'success')
         return redirect(url_for('patient.appointments'))
 
-    return render_template('patient/book_appointment.html', specializations=specializations)
+    return render_template('patient/book_appointment.html', specializations=specializations, selected_specialization=selected_specialization)
 
 
 # ==========================================
@@ -159,8 +159,17 @@ def symptom_checker():
             return render_template('patient/symptom_checker.html')
 
         extracted = extract_symptoms(symptoms_text)
-        predicted_disease, confidence = predict_disease(extracted)
-        disease_description = DISEASE_INFO.get(predicted_disease, "No additional information available.")
+        prediction_result = predict_disease(extracted)
+
+        # Primary prediction values for database logging and backward compatibility
+        predicted_disease = prediction_result.primary_disease
+        confidence = prediction_result.confidence
+        top_predictions = prediction_result.top_predictions
+        explainability = prediction_result.explainability
+        disclaimer = prediction_result.disclaimer
+
+        disease_description = get_disease_description(predicted_disease)
+        recommended_specialization = get_recommended_specialization(predicted_disease)
 
         patient = get_current_patient()
         new_log = SymptomLog(
@@ -172,13 +181,26 @@ def symptom_checker():
         db.session.add(new_log)
         db.session.commit()
 
+        # Format display names for extracted symptoms
+        formatted_symptoms = [
+            {
+                'code': s,
+                'name': format_symptom_display_name(s)
+            } for s in extracted
+        ]
+
         return render_template(
             'patient/symptom_result.html',
             symptoms_text=symptoms_text,
             extracted_symptoms=extracted,
+            formatted_symptoms=formatted_symptoms,
             predicted_disease=predicted_disease,
             confidence=confidence,
+            top_predictions=top_predictions,
+            explainability=explainability,
             disease_description=disease_description,
+            recommended_specialization=recommended_specialization,
+            disclaimer=disclaimer,
             log_id=new_log.id
         )
 
